@@ -115,6 +115,18 @@ async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT
 
 @with_db
 async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    match db_helper.delete_designated_driver(update.effective_chat.id, update.effective_user.username):
+        case DeleteResult.DELETED:
+            await update.effective_message.reply_text(
+                "You are no longer a designated driver.",
+                disable_notification=True,
+            )
+        case DeleteResult.NOT_FOUND:
+            await update.effective_message.reply_text("You were not a designated driver.", disable_notification=True)
+
+
+@with_db
+async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     latest_poll = db_helper.get_latest_poll_results(update.effective_chat.id)
     if not latest_poll:
         await update.effective_chat.send_message("No Polls found.")
@@ -129,18 +141,6 @@ On <b>{day_name}</b> is going on site:
 {"\n".join(usernames)}""",
         parse_mode=constants.ParseMode.HTML,
     )
-
-
-@with_db
-async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    match db_helper.delete_designated_driver(update.effective_chat.id, update.effective_user.username):
-        case DeleteResult.DELETED:
-            await update.effective_message.reply_text(
-                "You are no longer a designated driver.",
-                disable_notification=True,
-            )
-        case DeleteResult.NOT_FOUND:
-            await update.effective_message.reply_text("You were not a designated driver.", disable_notification=True)
 
 
 def main() -> None:
