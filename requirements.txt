@@ -1,0 +1,3 @@
+pydantic-settings
+python-dotenv
+python-telegram-bot
