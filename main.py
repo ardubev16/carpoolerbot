@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import calendar
 import logging
 from datetime import datetime
 
@@ -133,12 +134,17 @@ async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes
         return
 
     day_of_the_week = datetime.today().weekday()
-    day_name, usernames = latest_poll[day_of_the_week]
+    tomorrow = (day_of_the_week + 1) % 7
+    if tomorrow in (calendar.SATURDAY, calendar.SUNDAY):
+        await update.effective_chat.send_message("You are not working tomorrow, are you?")
+        return
+
+    day_name, usernames = latest_poll[tomorrow]
     await update.effective_chat.send_message(
         f"""\
 On <b>{day_name}</b> is going on site:
 
-{"\n".join(usernames)}""",
+{"\n".join(f"@{username}" for username in usernames)}""",
         parse_mode=constants.ParseMode.HTML,
     )
 
