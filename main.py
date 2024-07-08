@@ -77,37 +77,31 @@ async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTy
         return
 
     days: list[str] = []
-    for option, usernames in latest_poll:
-        days.append(
-            f"<b>{option}:</b> {" ".join(f"@{username}" for username in usernames)}",
-        )
+    for option, users in latest_poll:
+        days.append(f"<b>{option}:</b> {", ".join(user.mention_html() for user in users)}")
     await update.effective_chat.send_message("\n\n".join(days), parse_mode=constants.ParseMode.HTML)
 
 
 @with_db
 async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     poll_id = update.poll_answer.poll_id
-    answering_username = update.poll_answer.user.username
+    answering_user_id = update.poll_answer.user.id
     selected_options = update.poll_answer.option_ids
 
-    if not answering_username:
-        msg = "Do not handle the tuple (user_id, full_name) yet!"
-        raise NotImplementedError(msg)
-
     if not selected_options:
-        db_helper.delete_poll_answers(poll_id, answering_username)
-        logger.info("User %s retracted his vote", answering_username)
+        db_helper.delete_poll_answers(poll_id, answering_user_id)
+        logger.info("User %s retracted his vote", answering_user_id)
         return
 
     logger.info("Handling poll update")
     for option_id in selected_options:
-        db_helper.insert_poll_answer(poll_id, option_id, answering_username)
-        logger.info("Inserted answer %s by user %s, poll_id = %s", option_id, answering_username, poll_id)
+        db_helper.insert_poll_answer(poll_id, option_id, update.poll_answer.user)
+        logger.info("Inserted answer %s by user %s, poll_id = %s", option_id, answering_user_id, poll_id)
 
 
 @with_db
 async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    match db_helper.insert_designated_driver(update.effective_chat.id, update.effective_user.username):
+    match db_helper.insert_designated_driver(update.effective_chat.id, update.effective_user):
         case InsertResult.SUCCESS:
             await update.effective_message.reply_text("You are now a designated driver.", disable_notification=True)
         case InsertResult.ALREADY_EXIST:
@@ -116,7 +110,7 @@ async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT
 
 @with_db
 async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    match db_helper.delete_designated_driver(update.effective_chat.id, update.effective_user.username):
+    match db_helper.delete_designated_driver(update.effective_chat.id, update.effective_user.id):
         case DeleteResult.DELETED:
             await update.effective_message.reply_text(
                 "You are no longer a designated driver.",
@@ -139,12 +133,12 @@ async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes
         await update.effective_chat.send_message("You are not working tomorrow, are you?")
         return
 
-    day_name, usernames = latest_poll[tomorrow]
+    day_name, users = latest_poll[tomorrow]
     await update.effective_chat.send_message(
         f"""\
 On <b>{day_name}</b> is going on site:
 
-{"\n".join(f"@{username}" for username in usernames)}""",
+{"\n".join(user.mention_html() for user in users)}""",
         parse_mode=constants.ParseMode.HTML,
     )
 

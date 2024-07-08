@@ -3,11 +3,14 @@ from __future__ import annotations
 import functools
 import json
 import sqlite3
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Concatenate
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from telegram import User
 
     from carpooler.models import PollInstance
 
@@ -27,12 +30,27 @@ class DeleteResult(Enum):
     NOT_FOUND = auto()
 
 
+@dataclass
+class SimpleUser:
+    user_id: int
+    user_fullname: str
+
+    def mention_html(self) -> str:
+        return f'<a href="tg://user?id={self.user_id}">{self.user_fullname}</a>'
+
+
 class DbHelper:
     def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path)
 
     def create_tables(self) -> None:
         tables_init_queries = [
+            """\
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER,
+                user_fullname TEXT,
+                PRIMARY KEY (user_id)
+            )""",
             """\
             CREATE TABLE IF NOT EXISTS polls (
                 chat_id INTEGER,
@@ -45,15 +63,17 @@ class DbHelper:
             CREATE TABLE IF NOT EXISTS poll_answers (
                 poll_id TEXT,
                 option_id INTEGER,
-                username TEXT,
-                PRIMARY KEY (poll_id, option_id, username),
-                FOREIGN KEY (poll_id) REFERENCES polls(poll_id)
+                user_id INTEGER,
+                PRIMARY KEY (poll_id, option_id, user_id),
+                FOREIGN KEY (poll_id) REFERENCES polls(poll_id),
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
             )""",
             """\
             CREATE TABLE IF NOT EXISTS designated_drivers (
                 chat_id INTEGER,
-                username TEXT,
-                PRIMARY KEY (chat_id, username)
+                user_id INTEGER,
+                PRIMARY KEY (chat_id, user_id),
+                FOREIGN KEY (user_id) REFERENCES users(user_id)
             )""",
         ]
 
@@ -82,18 +102,29 @@ class DbHelper:
 
         return None
 
-    def insert_poll_answer(self, poll_id: str, option_id: int, username: str) -> None:
+    def _insert_user(self, user: User) -> None:
         self.conn.execute(
-            "INSERT INTO poll_answers (poll_id, option_id, username) VALUES (?, ?, ?)",
-            (poll_id, option_id, username),
+            """\
+            INSERT INTO users (user_id, user_fullname) VALUES (?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET user_fullname = ?""",
+            (user.id, user.full_name, user.full_name),
         )
         self.conn.commit()
 
-    def delete_poll_answers(self, poll_id: str, username: str) -> None:
-        self.conn.execute("DELETE FROM poll_answers WHERE poll_id = ? AND username = ?", (poll_id, username))
+    def insert_poll_answer(self, poll_id: str, option_id: int, user: User) -> None:
+        self._insert_user(user)
+        self.conn.execute(
+            "INSERT INTO poll_answers (poll_id, option_id, user_id) VALUES (?, ?, ?)",
+            (poll_id, option_id, user.id),
+        )
         self.conn.commit()
 
-    def get_latest_poll_results(self, chat_id: int) -> list[tuple[str, list[str]]] | None:
+    def delete_poll_answers(self, poll_id: str, user_id: int) -> None:
+        self.conn.execute("DELETE FROM poll_answers WHERE poll_id = ? AND user_id = ?", (poll_id, user_id))
+        self.conn.commit()
+
+    def get_latest_poll_results(self, chat_id: int) -> list[tuple[str, list[SimpleUser]]] | None:
+        """Return list wich elements are (option_id, list(user_id, user_fullname))."""
         result = self.conn.execute(
             "SELECT poll_id, options FROM polls WHERE chat_id = ? ORDER BY message_id DESC",
             (chat_id,),
@@ -103,19 +134,24 @@ class DbHelper:
 
         options = json.loads(result[1])
         answers = self.conn.execute(
-            "SELECT option_id, username FROM poll_answers WHERE poll_id = ?",
+            """\
+            SELECT pa.option_id, pa.user_id, u.user_fullname
+            FROM poll_answers pa
+            JOIN users u ON pa.user_id = u.user_id
+            WHERE poll_id = ?""",
             (result[0],),
         ).fetchall()
 
-        users_by_option: list[list[str]] = [[] for _ in options]
-        for option_id, username in answers:
-            users_by_option[option_id].append(username)
+        users_by_option: list[list[SimpleUser]] = [[] for _ in options]
+        for option_id, user_id, user_fullname in answers:
+            users_by_option[option_id].append(SimpleUser(user_id, user_fullname))
 
         return list(zip(options, users_by_option, strict=True))
 
-    def insert_designated_driver(self, chat_id: int, username: str) -> InsertResult:
+    def insert_designated_driver(self, chat_id: int, user: User) -> InsertResult:
+        self._insert_user(user)
         try:
-            self.conn.execute("INSERT INTO designated_drivers (chat_id, username) VALUES (?, ?)", (chat_id, username))
+            self.conn.execute("INSERT INTO designated_drivers (chat_id, user_id) VALUES (?, ?)", (chat_id, user.id))
         except sqlite3.IntegrityError:  # UNIQUE constraint failed
             return InsertResult.ALREADY_EXIST
         finally:
@@ -123,10 +159,10 @@ class DbHelper:
 
         return InsertResult.SUCCESS
 
-    def delete_designated_driver(self, chat_id: int, username: str) -> DeleteResult:
+    def delete_designated_driver(self, chat_id: int, user_id: int) -> DeleteResult:
         deleted_rows = self.conn.execute(
-            "DELETE FROM designated_drivers WHERE chat_id = ? AND username = ?",
-            (chat_id, username),
+            "DELETE FROM designated_drivers WHERE chat_id = ? AND user_id = ?",
+            (chat_id, user_id),
         ).rowcount
         self.conn.commit()
 
