@@ -34,9 +34,11 @@ class DeleteResult(Enum):
 class SimpleUser:
     user_id: int
     user_fullname: str
+    is_designated_driver: bool
 
     def mention_html(self) -> str:
-        return f'<a href="tg://user?id={self.user_id}">{self.user_fullname}</a>'
+        fullname = "🏎 " + self.user_fullname if self.is_designated_driver else self.user_fullname
+        return f'<a href="tg://user?id={self.user_id}">{fullname}</a>'
 
 
 class DbHelper:
@@ -135,16 +137,20 @@ class DbHelper:
         options = json.loads(result[1])
         answers = self.conn.execute(
             """\
-            SELECT pa.option_id, pa.user_id, u.user_fullname
+            SELECT
+                pa.option_id,
+                pa.user_id,
+                u.user_fullname,
+                EXISTS(SELECT * FROM designated_drivers dd WHERE dd.user_id = pa.user_id AND dd.chat_id = ?)
             FROM poll_answers pa
             JOIN users u ON pa.user_id = u.user_id
             WHERE poll_id = ?""",
-            (result[0],),
+            (chat_id, result[0]),
         ).fetchall()
 
         users_by_option: list[list[SimpleUser]] = [[] for _ in options]
-        for option_id, user_id, user_fullname in answers:
-            users_by_option[option_id].append(SimpleUser(user_id, user_fullname))
+        for option_id, user_id, user_fullname, is_designated_driver in answers:
+            users_by_option[option_id].append(SimpleUser(user_id, user_fullname, is_designated_driver))
 
         return list(zip(options, users_by_option, strict=True))
 

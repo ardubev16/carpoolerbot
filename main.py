@@ -78,7 +78,9 @@ async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTy
 
     days: list[str] = []
     for option, users in latest_poll:
-        days.append(f"<b>{option}:</b> {", ".join(user.mention_html() for user in users)}")
+        days.append(f"""\
+<b>{option}:</b>
+  {"\n  ".join(user.mention_html() for user in users)}""")
     await update.effective_chat.send_message("\n\n".join(days), parse_mode=constants.ParseMode.HTML)
 
 
