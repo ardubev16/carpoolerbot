@@ -104,8 +104,8 @@ async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> No
                 text=text,
                 parse_mode=constants.ParseMode.HTML,
             )
-        except telegram.error.BadRequest:
-            logger.info("This message has not been modified: %s", text)
+        except telegram.error.BadRequest as err:
+            logger.info("%s %s", err, {"chat_id": report.chat_id, "message_id": report.message_id})
 
 
 @with_db
