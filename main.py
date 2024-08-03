@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import calendar
 import logging
 from datetime import datetime
 
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
-from telegram import Update, constants
+from telegram import Bot, Update, constants
+import telegram
 from telegram.ext import Application, CommandHandler, ContextTypes, PollAnswerHandler
 
 from carpooler.database import DbHelper, DeleteResult, InsertResult, init_db, with_db
-from carpooler.models import PollInstance
+from carpooler.message_serializers import full_poll_result, whos_tomorrow_text
+from carpooler.models import PollInstance, PollReportType
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -71,17 +72,40 @@ async def poll_cmd(db_helper: DbHelper, update: Update, context: ContextTypes.DE
 
 @with_db
 async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    latest_poll = db_helper.get_latest_poll_results(update.effective_chat.id)
-    if not latest_poll:
+    latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
+    if not latest_poll_id:
         await update.effective_chat.send_message("No Polls found.")
         return
 
-    days: list[str] = []
-    for option, users in latest_poll:
-        days.append(f"""\
-<b>{option}:</b>
-  {"\n  ".join(user.mention_html() for user in users)}""")
-    await update.effective_chat.send_message("\n\n".join(days), parse_mode=constants.ParseMode.HTML)
+    latest_poll = db_helper.get_poll_results(latest_poll_id)
+    poll_report = await update.effective_chat.send_message(
+        full_poll_result(latest_poll),
+        parse_mode=constants.ParseMode.HTML,
+    )
+    db_helper.insert_poll_report(latest_poll_id, poll_report, PollReportType.FULL_WEEK)
+
+
+async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> None:
+    poll_reports = db_helper.get_poll_reports(poll_id)
+    latest_poll = db_helper.get_poll_results(poll_id)
+
+    for report in poll_reports:
+        match report.message_type:
+            case PollReportType.SINGLE_DAY:
+                day_of_the_week = datetime.fromtimestamp(report.sent_timestamp).weekday()
+                text = whos_tomorrow_text(latest_poll, day_of_the_week)
+            case PollReportType.FULL_WEEK:
+                text = full_poll_result(latest_poll)
+
+        try:
+            await bot.edit_message_text(
+                chat_id=report.chat_id,
+                message_id=report.message_id,
+                text=text,
+                parse_mode=constants.ParseMode.HTML,
+            )
+        except telegram.error.BadRequest:
+            logger.info("This message has not been modified: %s", text)
 
 
 @with_db
@@ -93,12 +117,13 @@ async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextType
     if not selected_options:
         db_helper.delete_poll_answers(poll_id, answering_user_id)
         logger.info("User %s retracted his vote", answering_user_id)
-        return
+    else:
+        logger.info("Handling poll update")
+        for option_id in selected_options:
+            db_helper.insert_poll_answer(poll_id, option_id, update.poll_answer.user)
+            logger.info("Inserted answer %s by user %s, poll_id = %s", option_id, answering_user_id, poll_id)
 
-    logger.info("Handling poll update")
-    for option_id in selected_options:
-        db_helper.insert_poll_answer(poll_id, option_id, update.poll_answer.user)
-        logger.info("Inserted answer %s by user %s, poll_id = %s", option_id, answering_user_id, poll_id)
+    await update_poll_reports(db_helper, update.get_bot(), poll_id)
 
 
 @with_db
@@ -124,25 +149,19 @@ async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAU
 
 @with_db
 async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    latest_poll = db_helper.get_latest_poll_results(update.effective_chat.id)
-    if not latest_poll:
+    latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
+    if not latest_poll_id:
         await update.effective_chat.send_message("No Polls found.")
         return
 
+    latest_poll = db_helper.get_poll_results(latest_poll_id)
     day_of_the_week = datetime.today().weekday()
-    tomorrow = (day_of_the_week + 1) % 7
-    if tomorrow in (calendar.SATURDAY, calendar.SUNDAY):
-        await update.effective_chat.send_message("You are not working tomorrow, are you?")
-        return
 
-    day_name, users = latest_poll[tomorrow]
-    await update.effective_chat.send_message(
-        f"""\
-On <b>{day_name}</b> is going on site:
-
-{"\n".join(user.mention_html() for user in users)}""",
+    poll_report = await update.effective_chat.send_message(
+        whos_tomorrow_text(latest_poll, day_of_the_week),
         parse_mode=constants.ParseMode.HTML,
     )
+    db_helper.insert_poll_report(latest_poll_id, poll_report, PollReportType.SINGLE_DAY)
 
 
 def main() -> None:

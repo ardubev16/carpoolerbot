@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Concatenate
 
+from carpooler.models import PollReport, PollReportType
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from telegram import User
+    from telegram import Message, User
 
     from carpooler.models import PollInstance
 
@@ -62,6 +64,16 @@ class DbHelper:
                 PRIMARY KEY (chat_id, poll_id)
             )""",
             """\
+            CREATE TABLE IF NOT EXISTS poll_reports (
+                poll_id TEXT,
+                chat_id INTEGER,
+                message_id INTEGER,
+                sent_timestamp INTEGER,
+                message_type INTEGER,
+                PRIMARY KEY (chat_id, message_id),
+                FOREIGN KEY (poll_id) REFERENCES polls(poll_id)
+            )""",
+            """\
             CREATE TABLE IF NOT EXISTS poll_answers (
                 poll_id TEXT,
                 option_id INTEGER,
@@ -99,10 +111,20 @@ class DbHelper:
             "SELECT message_id FROM polls WHERE chat_id = ? ORDER BY message_id DESC",
             (chat_id,),
         ).fetchone()
-        if latest_poll:
-            return latest_poll[0]
+        if not latest_poll:
+            return None
 
-        return None
+        return latest_poll[0]
+
+    def get_latest_poll_id(self, chat_id: int) -> str | None:
+        result = self.conn.execute(
+            "SELECT poll_id FROM polls WHERE chat_id = ? ORDER BY message_id DESC",
+            (chat_id,),
+        ).fetchone()
+        if not result:
+            return None
+
+        return result[0]
 
     def _insert_user(self, user: User) -> None:
         self.conn.execute(
@@ -125,14 +147,9 @@ class DbHelper:
         self.conn.execute("DELETE FROM poll_answers WHERE poll_id = ? AND user_id = ?", (poll_id, user_id))
         self.conn.commit()
 
-    def get_latest_poll_results(self, chat_id: int) -> list[tuple[str, list[SimpleUser]]] | None:
+    def get_poll_results(self, poll_id: str) -> list[tuple[str, list[SimpleUser]]]:
         """Return list wich elements are (option_id, list(user_id, user_fullname))."""
-        result = self.conn.execute(
-            "SELECT poll_id, options FROM polls WHERE chat_id = ? ORDER BY message_id DESC",
-            (chat_id,),
-        ).fetchone()
-        if not result:
-            return None
+        result = self.conn.execute("SELECT chat_id, options FROM polls WHERE poll_id = ?", (poll_id,)).fetchone()
 
         options = json.loads(result[1])
         answers = self.conn.execute(
@@ -145,7 +162,7 @@ class DbHelper:
             FROM poll_answers pa
             JOIN users u ON pa.user_id = u.user_id
             WHERE poll_id = ?""",
-            (chat_id, result[0]),
+            (result[0], poll_id),
         ).fetchall()
 
         users_by_option: list[list[SimpleUser]] = [[] for _ in options]
@@ -176,6 +193,29 @@ class DbHelper:
             return DeleteResult.NOT_FOUND
 
         return DeleteResult.DELETED
+
+    def get_poll_reports(self, poll_id: str) -> list[PollReport]:
+        poll_reports = self.conn.execute(
+            "SELECT chat_id, message_id, sent_timestamp, message_type FROM poll_reports WHERE poll_id = ?",
+            (poll_id,),
+        ).fetchall()
+
+        return [
+            PollReport(poll_id, chat_id, message_id, sent_timestamp, message_type)
+            for (chat_id, message_id, sent_timestamp, message_type) in poll_reports
+        ]
+
+    def insert_poll_report(
+        self,
+        poll_id: str,
+        report_message: Message,
+        message_type: PollReportType,
+    ) -> None:
+        self.conn.execute(
+            "INSERT INTO poll_reports (poll_id, chat_id, message_id, sent_timestamp, message_type) VALUES (?, ?, ?, ?, ?)",
+            (poll_id, report_message.chat_id, report_message.id, int(report_message.date.timestamp()), message_type),
+        )
+        self.conn.commit()
 
 
 def init_db(db_path: str) -> None:
