@@ -46,6 +46,9 @@ async def post_init(db_helper: DbHelper, app: Application) -> None:
 
 @with_db
 async def poll_cmd(db_helper: DbHelper, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat  # noqa: S101
+    assert update.effective_message  # noqa: S101
+
     await update.effective_message.delete()
     if latest_poll_msg_id := db_helper.get_latest_poll_message_id(update.effective_chat.id):
         await context.bot.stop_poll(update.effective_chat.id, latest_poll_msg_id)
@@ -60,6 +63,7 @@ async def poll_cmd(db_helper: DbHelper, update: Update, context: ContextTypes.DE
     )
     await message.pin()
 
+    assert message.poll  # noqa: S101
     db_helper.insert_new_poll(
         PollInstance(
             chat_id=update.effective_chat.id,
@@ -72,6 +76,8 @@ async def poll_cmd(db_helper: DbHelper, update: Update, context: ContextTypes.DE
 
 @with_db
 async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat  # noqa: S101
+
     latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
     if not latest_poll_id:
         await update.effective_chat.send_message("No Polls found.")
@@ -110,6 +116,9 @@ async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> No
 
 @with_db
 async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.poll_answer  # noqa: S101
+    assert update.poll_answer.user  # noqa: S101
+
     poll_id = update.poll_answer.poll_id
     answering_user_id = update.poll_answer.user.id
     selected_options = update.poll_answer.option_ids
@@ -128,7 +137,10 @@ async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextType
 
 @with_db
 async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    match db_helper.insert_designated_driver(update.effective_chat.id, update.effective_user):
+    assert update.effective_message  # noqa: S101
+    assert update.effective_user  # noqa: S101
+
+    match db_helper.insert_designated_driver(update.effective_message.chat_id, update.effective_user):
         case InsertResult.SUCCESS:
             await update.effective_message.reply_text("You are now a designated driver.", disable_notification=True)
         case InsertResult.ALREADY_EXIST:
@@ -137,7 +149,10 @@ async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT
 
 @with_db
 async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    match db_helper.delete_designated_driver(update.effective_chat.id, update.effective_user.id):
+    assert update.effective_message  # noqa: S101
+    assert update.effective_user  # noqa: S101
+
+    match db_helper.delete_designated_driver(update.effective_message.chat_id, update.effective_user.id):
         case DeleteResult.DELETED:
             await update.effective_message.reply_text(
                 "You are no longer a designated driver.",
@@ -149,6 +164,8 @@ async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAU
 
 @with_db
 async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat  # noqa: S101
+
     latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
     if not latest_poll_id:
         await update.effective_chat.send_message("No Polls found.")
