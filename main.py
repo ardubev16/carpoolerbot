@@ -3,11 +3,11 @@
 import logging
 from datetime import datetime
 
+import telegram
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from telegram import Bot, Update, constants
-import telegram
 from telegram.ext import Application, CommandHandler, ContextTypes, PollAnswerHandler
 
 from carpooler.database import DbHelper, DeleteResult, InsertResult, init_db, with_db
