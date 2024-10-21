@@ -212,7 +212,7 @@ class DbHelper:
         message_type: PollReportType,
     ) -> None:
         self.conn.execute(
-            "INSERT INTO poll_reports (poll_id, chat_id, message_id, sent_timestamp, message_type) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO poll_reports (poll_id, chat_id, message_id, sent_timestamp, message_type) VALUES (?, ?, ?, ?, ?)",  # noqa: E501
             (poll_id, report_message.chat_id, report_message.id, int(report_message.date.timestamp()), message_type),
         )
         self.conn.commit()

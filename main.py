@@ -4,15 +4,19 @@ import logging
 from datetime import datetime
 
 import telegram
+
+# from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from telegram import Bot, Update, constants
-from telegram.ext import Application, CommandHandler, ContextTypes, PollAnswerHandler
+from telegram.ext import Application, CallbackContext, CommandHandler, ContextTypes, PollAnswerHandler
 
+from carpooler.actions import send_poll, send_whos_tomorrow
 from carpooler.database import DbHelper, DeleteResult, InsertResult, init_db, with_db
 from carpooler.message_serializers import full_poll_result, whos_tomorrow_text
-from carpooler.models import PollInstance, PollReportType
+from carpooler.models import PollReportType
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -35,43 +39,23 @@ async def post_init(db_helper: DbHelper, app: Application) -> None:
     db_helper.create_tables()
     await app.bot.set_my_commands(
         (
-            ("poll", "Manually send the weekly Poll"),
-            ("get_poll_results", "Get results to last Poll"),
+            ("poll", "Manually send the weekly Poll."),
+            ("get_poll_results", "Get results to last Poll."),
             ("whos_tomorrow", "Return the people on site tomorrow."),
-            ("drive", "Show you as a Designated Driver"),
-            ("nodrive", "Remove you from the Designated Driver list"),
+            ("drive", "Show you as a Designated Driver."),
+            ("nodrive", "Remove you from the Designated Driver list."),
+            ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at 7pm."),
+            ("disable_schedule", "Disable automatic messages."),
         ),
     )
 
 
-@with_db
-async def poll_cmd(db_helper: DbHelper, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def poll_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat  # noqa: S101
     assert update.effective_message  # noqa: S101
 
     await update.effective_message.delete()
-    if latest_poll_msg_id := db_helper.get_latest_poll_message_id(update.effective_chat.id):
-        await context.bot.stop_poll(update.effective_chat.id, latest_poll_msg_id)
-        await update.effective_chat.unpin_message(latest_poll_msg_id)
-
-    options = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    message = await update.effective_chat.send_poll(
-        "When are you going on site this week?",
-        options,
-        is_anonymous=False,
-        allows_multiple_answers=True,
-    )
-    await message.pin()
-
-    assert message.poll  # noqa: S101
-    db_helper.insert_new_poll(
-        PollInstance(
-            chat_id=update.effective_chat.id,
-            message_id=message.id,
-            poll_id=message.poll.id,
-            options=options,
-        ),
-    )
+    await send_poll(update.get_bot(), update.effective_chat.id)
 
 
 @with_db
@@ -162,23 +146,52 @@ async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAU
             await update.effective_message.reply_text("You were not a designated driver.", disable_notification=True)
 
 
-@with_db
-async def whos_tomorrow_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat  # noqa: S101
+    await send_whos_tomorrow(update.get_bot(), update.effective_chat.id)
 
-    latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
-    if not latest_poll_id:
-        await update.effective_chat.send_message("No Polls found.")
-        return
 
-    latest_poll = db_helper.get_poll_results(latest_poll_id)
-    day_of_the_week = datetime.today().weekday()
+def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Remove job with given name. Returns whether job was removed."""
+    current_jobs = context.job_queue.get_jobs_by_name(name)
+    if not current_jobs:
+        return False
+    for job in current_jobs:
+        job.schedule_removal()
+    return True
 
-    poll_report = await update.effective_chat.send_message(
-        whos_tomorrow_text(latest_poll, day_of_the_week),
-        parse_mode=constants.ParseMode.HTML,
+
+async def send_whos_tomorrow_callback(context: CallbackContext) -> None:
+    await send_whos_tomorrow(context.bot, context.job.chat_id)
+
+
+async def send_poll_callback(context: CallbackContext) -> None:
+    await send_poll(context.bot, context.job.chat_id)
+
+
+async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = update.effective_message.chat_id
+    job_removed = remove_job_if_exists(str(chat_id), context)
+    context.job_queue.run_custom(
+        send_poll_callback,
+        {"trigger": CronTrigger(day_of_week="sun", hour=12)},
+        chat_id=chat_id,
+        name=str(chat_id),
     )
-    db_helper.insert_poll_report(latest_poll_id, poll_report, PollReportType.SINGLE_DAY)
+    context.job_queue.run_custom(
+        send_whos_tomorrow_callback,
+        {"trigger": CronTrigger(day_of_week="sun, mon-thu", hour=19)},
+        chat_id=chat_id,
+        name=str(chat_id),
+    )
+    message_text = "Schedule was already enabled, it has been reset." if job_removed else "Schedule has been enabled."
+    await update.effective_chat.send_message(message_text, disable_notification=True)
+
+
+async def disable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    job_removed = remove_job_if_exists(str(update.effective_message.chat_id), context)
+    message_text = "Schedule has been disabled." if job_removed else "Schedule was not enabled."
+    await update.effective_chat.send_message(message_text, disable_notification=True)
 
 
 def main() -> None:
@@ -187,14 +200,16 @@ def main() -> None:
     init_db(settings.DB_PATH)
 
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(post_init).build()
+    # application.job_queue.scheduler.add_jobstore(SQLAlchemyJobStore("sqlite://"))
     application.add_handler(CommandHandler("poll", poll_cmd))
     application.add_handler(CommandHandler("get_poll_results", get_poll_results_cmd))
     application.add_handler(CommandHandler("whos_tomorrow", whos_tomorrow_cmd))
     application.add_handler(CommandHandler("drive", drive_cmd))
     application.add_handler(CommandHandler("nodrive", nodrive_cmd))
+    application.add_handler(CommandHandler("enable_schedule", enable_schedule_cmd))
+    application.add_handler(CommandHandler("disable_schedule", disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(handle_poll_answer))
 
-    # application.job_queue.run_custom()
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
