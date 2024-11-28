@@ -51,8 +51,8 @@ async def post_init(db_helper: DbHelper, app: Application) -> None:
 
 
 async def poll_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_chat  # noqa: S101
-    assert update.effective_message  # noqa: S101
+    assert update.effective_chat
+    assert update.effective_message
 
     await update.effective_message.delete()
     await send_poll(update.get_bot(), update.effective_chat.id)
@@ -60,7 +60,7 @@ async def poll_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
 
 @with_db
 async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_chat  # noqa: S101
+    assert update.effective_chat
 
     latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
     if not latest_poll_id:
@@ -100,8 +100,8 @@ async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> No
 
 @with_db
 async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.poll_answer  # noqa: S101
-    assert update.poll_answer.user  # noqa: S101
+    assert update.poll_answer
+    assert update.poll_answer.user
 
     poll_id = update.poll_answer.poll_id
     answering_user_id = update.poll_answer.user.id
@@ -121,8 +121,8 @@ async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextType
 
 @with_db
 async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_message  # noqa: S101
-    assert update.effective_user  # noqa: S101
+    assert update.effective_message
+    assert update.effective_user
 
     match db_helper.insert_designated_driver(update.effective_message.chat_id, update.effective_user):
         case InsertResult.SUCCESS:
@@ -133,8 +133,8 @@ async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT
 
 @with_db
 async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_message  # noqa: S101
-    assert update.effective_user  # noqa: S101
+    assert update.effective_message
+    assert update.effective_user
 
     match db_helper.delete_designated_driver(update.effective_message.chat_id, update.effective_user.id):
         case DeleteResult.DELETED:
@@ -147,12 +147,15 @@ async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAU
 
 
 async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_chat  # noqa: S101
+    assert update.effective_chat
+
     await send_whos_tomorrow(update.get_bot(), update.effective_chat.id)
 
 
 def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
     """Remove job with given name. Returns whether job was removed."""
+    assert context.job_queue
+
     current_jobs = context.job_queue.get_jobs_by_name(name)
     if not current_jobs:
         return False
@@ -162,14 +165,24 @@ def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
 
 
 async def send_whos_tomorrow_callback(context: CallbackContext) -> None:
+    assert context.job
+    assert context.job.chat_id
+
     await send_whos_tomorrow(context.bot, context.job.chat_id)
 
 
 async def send_poll_callback(context: CallbackContext) -> None:
+    assert context.job
+    assert context.job.chat_id
+
     await send_poll(context.bot, context.job.chat_id)
 
 
 async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert context.job_queue
+    assert update.effective_chat
+    assert update.effective_message
+
     chat_id = update.effective_message.chat_id
     job_removed = remove_job_if_exists(str(chat_id), context)
     context.job_queue.run_custom(
@@ -189,6 +202,9 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def disable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat
+    assert update.effective_message
+
     job_removed = remove_job_if_exists(str(update.effective_message.chat_id), context)
     message_text = "Schedule has been disabled." if job_removed else "Schedule was not enabled."
     await update.effective_chat.send_message(message_text, disable_notification=True)

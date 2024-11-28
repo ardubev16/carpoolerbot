@@ -40,8 +40,8 @@ async def send_poll(db_helper: DbHelper, bot: Bot, chat_id: int) -> None:
         allows_multiple_answers=True,
     )
     await message.pin()
+    assert message.poll
 
-    assert message.poll  # noqa: S101
     db_helper.insert_new_poll(
         PollInstance(
             chat_id=chat_id,
