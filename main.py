@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
+import argparse
 import logging
 from datetime import datetime
 
 import telegram
-
-# from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 from pydantic import Field
@@ -14,6 +13,7 @@ from telegram import Bot, Update, constants
 from telegram.ext import Application, CallbackContext, CommandHandler, ContextTypes, PollAnswerHandler
 
 from carpooler.actions import send_poll, send_whos_tomorrow
+from carpooler.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
 from carpooler.database import DbHelper, DeleteResult, InsertResult, init_db, with_db
 from carpooler.message_serializers import full_poll_result, whos_tomorrow_text
 from carpooler.models import PollReportType
@@ -44,15 +44,22 @@ async def post_init(db_helper: DbHelper, app: Application) -> None:
             ("whos_tomorrow", "Return the people on site tomorrow."),
             ("drive", "Show you as a Designated Driver."),
             ("nodrive", "Remove you from the Designated Driver list."),
-            ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at 7pm."),
+            ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at set time."),
             ("disable_schedule", "Disable automatic messages."),
         ),
     )
 
 
-async def poll_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def poll_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat
     assert update.effective_message
+
+    if jobs_exist(str(update.effective_chat.id), context):
+        await update.effective_chat.send_message(
+            "Schedule is enabled, to manually send poll, disable schedule first.",
+            disable_notification=True,
+        )
+        return
 
     await update.effective_message.delete()
     await send_poll(update.get_bot(), update.effective_chat.id)
@@ -152,6 +159,11 @@ async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> Non
     await send_whos_tomorrow(update.get_bot(), update.effective_chat.id)
 
 
+def jobs_exist(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    assert context.job_queue
+    return bool(context.job_queue.get_jobs_by_name(name))
+
+
 def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
     """Remove job with given name. Returns whether job was removed."""
     assert context.job_queue
@@ -183,17 +195,30 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
     assert update.effective_chat
     assert update.effective_message
 
+    parser = argparse.ArgumentParser(exit_on_error=False)
+    parser.add_argument("poll_hour", type=int)
+    parser.add_argument("tomorrow_message_hour", type=int)
+
+    try:
+        args = parser.parse_args(context.args)
+    except argparse.ArgumentError:
+        await update.effective_chat.send_message(
+            "Usage: /enable_schedule <poll_hour> <tomorrow_message_hour>",
+            disable_notification=True,
+        )
+        return
+
     chat_id = update.effective_message.chat_id
     job_removed = remove_job_if_exists(str(chat_id), context)
     context.job_queue.run_custom(
         send_poll_callback,
-        {"trigger": CronTrigger(day_of_week="sun", hour=12)},
+        {"trigger": CronTrigger(day_of_week="sun", hour=args.poll_hour)},
         chat_id=chat_id,
         name=str(chat_id),
     )
     context.job_queue.run_custom(
         send_whos_tomorrow_callback,
-        {"trigger": CronTrigger(day_of_week="sun, mon-thu", hour=19)},
+        {"trigger": CronTrigger(day_of_week="sun, mon-thu", hour=args.tomorrow_message_hour)},
         chat_id=chat_id,
         name=str(chat_id),
     )
@@ -216,7 +241,12 @@ def main() -> None:
     init_db(settings.DB_PATH)
 
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(post_init).build()
-    # application.job_queue.scheduler.add_jobstore(SQLAlchemyJobStore("sqlite://"))
+
+    if settings.DB_PATH != ":memory:":
+        assert application.job_queue
+        application.job_queue.scheduler.add_jobstore(
+            PTBSQLAlchemyJobStore(application=application, url="sqlite:///" + settings.DB_PATH),
+        )
     application.add_handler(CommandHandler("poll", poll_cmd))
     application.add_handler(CommandHandler("get_poll_results", get_poll_results_cmd))
     application.add_handler(CommandHandler("whos_tomorrow", whos_tomorrow_cmd))
