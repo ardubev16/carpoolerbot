@@ -195,6 +195,14 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
     assert update.effective_chat
     assert update.effective_message
 
+    chat_id = update.effective_message.chat_id
+    if jobs_exist(str(chat_id), context):
+        await update.effective_chat.send_message(
+            "Schedule is already present, delete it first.",
+            disable_notification=True,
+        )
+        return
+
     parser = argparse.ArgumentParser(exit_on_error=False)
     parser.add_argument("poll_hour", type=int)
     parser.add_argument("tomorrow_message_hour", type=int)
@@ -208,8 +216,6 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         return
 
-    chat_id = update.effective_message.chat_id
-    job_removed = remove_job_if_exists(str(chat_id), context)
     context.job_queue.run_custom(
         send_poll_callback,
         {"trigger": CronTrigger(day_of_week="sun", hour=args.poll_hour)},
@@ -222,7 +228,11 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
         chat_id=chat_id,
         name=str(chat_id),
     )
-    message_text = "Schedule was already enabled, it has been reset." if job_removed else "Schedule has been enabled."
+    message_text = f"""\
+Schedule has been enabled with the following settings:
+
+- Poll will be sent every Sunday at {args.poll_hour}:00.
+- Tomorrow's people message will be sent at {args.tomorrow_message_hour}:00."""
     await update.effective_chat.send_message(message_text, disable_notification=True)
 
 
