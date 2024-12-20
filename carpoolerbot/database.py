@@ -7,14 +7,14 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Concatenate
 
-from carpooler.models import PollReport, PollReportType
+from carpoolerbot.models import PollReport, PollReportType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from telegram import Message, User
 
-    from carpooler.models import PollInstance
+    from carpoolerbot.models import PollInstance
 
 
 class UpsertResult(Enum):

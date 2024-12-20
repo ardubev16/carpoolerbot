@@ -1,6 +1,6 @@
 import calendar
 
-from carpooler.database import SimpleUser
+from carpoolerbot.database import SimpleUser
 
 
 def whos_tomorrow_text(latest_poll: list[tuple[str, list[SimpleUser]]], day_of_the_week: int) -> str:

@@ -2,9 +2,9 @@ from datetime import datetime
 
 from telegram import Bot, constants
 
-from carpooler.database import DbHelper, with_db
-from carpooler.message_serializers import whos_tomorrow_text
-from carpooler.models import PollInstance, PollReportType
+from carpoolerbot.database import DbHelper, with_db
+from carpoolerbot.message_serializers import whos_tomorrow_text
+from carpoolerbot.models import PollInstance, PollReportType
 
 
 @with_db
