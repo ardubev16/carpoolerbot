@@ -47,7 +47,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic-settings" },
-    { name = "python-dotenv" },
     { name = "python-telegram-bot", extra = ["job-queue"] },
     { name = "sqlalchemy" },
 ]
@@ -60,7 +59,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic-settings", specifier = "==2.6.1" },
-    { name = "python-dotenv", specifier = "==1.0.1" },
     { name = "python-telegram-bot", extras = ["job-queue"], specifier = "==21.7" },
     { name = "sqlalchemy", specifier = "==2.0.36" },
 ]

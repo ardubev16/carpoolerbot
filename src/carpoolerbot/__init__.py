@@ -2,9 +2,8 @@
 
 import logging
 
-from dotenv import load_dotenv
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from telegram import Update
 from telegram.ext import Application, CommandHandler, PollAnswerHandler
 
@@ -16,11 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     TELEGRAM_TOKEN: str = Field(default=...)
     DB_PATH: str = Field(default=":memory:")
-
-
-WEEKDAYS_POLL = "weekdays_poll"
 
 
 @with_db
@@ -43,7 +41,6 @@ def main() -> None:
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    load_dotenv()
     settings = Settings()
     init_db(settings.DB_PATH)
 
