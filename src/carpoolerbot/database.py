@@ -148,7 +148,7 @@ class DbHelper:
         self.conn.commit()
 
     def get_poll_results(self, poll_id: str) -> list[tuple[str, list[SimpleUser]]]:
-        """Return list wich elements are (option_id, list(user_id, user_fullname))."""
+        """Return list which elements are (option_id, list(user_id, user_fullname))."""
         result = self.conn.execute("SELECT chat_id, options FROM polls WHERE poll_id = ?", (poll_id,)).fetchone()
 
         options = json.loads(result[1])
