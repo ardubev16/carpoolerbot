@@ -1,9 +1,9 @@
-from datetime import datetime
+import datetime
 
 from telegram import Bot, constants
 
 from carpoolerbot.database import DbHelper, with_db
-from carpoolerbot.message_serializers import whos_tomorrow_text
+from carpoolerbot.message_serializers import whos_on_text
 from carpoolerbot.models import PollInstance, PollReportType
 
 
@@ -15,11 +15,11 @@ async def send_whos_tomorrow(db_helper: DbHelper, bot: Bot, chat_id: int) -> Non
         return
 
     latest_poll = db_helper.get_poll_results(latest_poll_id)
-    day_of_the_week = datetime.today().weekday()
+    tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
 
     poll_report = await bot.send_message(
         chat_id,
-        whos_tomorrow_text(latest_poll, day_of_the_week),
+        whos_on_text(latest_poll, tomorrow),
         parse_mode=constants.ParseMode.HTML,
     )
     db_helper.insert_poll_report(latest_poll_id, poll_report, PollReportType.SINGLE_DAY)

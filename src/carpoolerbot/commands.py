@@ -1,5 +1,5 @@
+import datetime
 import logging
-from datetime import datetime
 
 import telegram
 from telegram import Bot, Update, constants
@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 
 from carpoolerbot.actions import send_poll, send_whos_tomorrow
 from carpoolerbot.database import DbHelper, DeleteResult, InsertResult, with_db
-from carpoolerbot.message_serializers import full_poll_result, whos_tomorrow_text
+from carpoolerbot.message_serializers import full_poll_result, whos_on_text
 from carpoolerbot.models import PollReportType
 from carpoolerbot.schedules import jobs_exist
 
@@ -53,8 +53,10 @@ async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> No
     for report in poll_reports:
         match report.message_type:
             case PollReportType.SINGLE_DAY:
-                day_of_the_week = datetime.fromtimestamp(report.sent_timestamp).weekday()
-                text = whos_tomorrow_text(latest_poll, day_of_the_week)
+                day_after_sent_report = datetime.datetime.fromtimestamp(report.sent_timestamp) + datetime.timedelta(
+                    days=1,
+                )
+                text = whos_on_text(latest_poll, day_after_sent_report)
             case PollReportType.FULL_WEEK:
                 text = full_poll_result(latest_poll)
 
