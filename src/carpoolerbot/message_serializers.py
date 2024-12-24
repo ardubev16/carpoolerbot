@@ -11,6 +11,8 @@ def whos_on_text(latest_poll: list[tuple[str, list[SimpleUser]]], day: datetime.
     if day_of_the_week in (calendar.SATURDAY, calendar.SUNDAY):
         return "You are not working tomorrow, are you?"
 
+    # TODO: hardcoded country and subdiv, would be nice if it was configurable
+    # https://github.com/ardubev16/carpoolerbot/issues/7
     if holiday := holidays.country_holidays("IT", subdiv="BZ").get(day):
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
