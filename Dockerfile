@@ -24,7 +24,6 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
-
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
