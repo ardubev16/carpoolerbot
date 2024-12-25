@@ -55,7 +55,7 @@ async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE
         )
         return
 
-    parser = argparse.ArgumentParser(exit_on_error=False)
+    parser = argparse.ArgumentParser(exit_on_error=False, add_help=False)
     parser.add_argument("poll_hour", type=int)
     parser.add_argument("tomorrow_message_hour", type=int)
 
