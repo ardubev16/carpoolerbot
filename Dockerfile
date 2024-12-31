@@ -3,7 +3,7 @@
 # Build app dependencies
 FROM python:3.12.8-slim-bookworm AS builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
-COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.5.13 /uv /bin/
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
