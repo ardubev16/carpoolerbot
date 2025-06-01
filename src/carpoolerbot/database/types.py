@@ -2,16 +2,6 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 
 
-class UpsertResult(Enum):
-    INSERTED = auto()
-    UPDATED = auto()
-
-
-class InsertResult(Enum):
-    SUCCESS = auto()
-    ALREADY_EXIST = auto()
-
-
 class DeleteResult(Enum):
     DELETED = auto()
     NOT_FOUND = auto()

@@ -23,6 +23,7 @@ FROM python:3.12.8-slim-bookworm
 WORKDIR /app
 
 COPY --from=builder /app /app
+COPY alembic.ini entrypoint.sh ./
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
