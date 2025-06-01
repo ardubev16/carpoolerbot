@@ -3,7 +3,7 @@ import datetime
 
 import holidays
 
-from carpoolerbot.database import SimpleUser
+from carpoolerbot.database.types import SimpleUser
 
 
 def whos_on_text(latest_poll: list[tuple[str, list[SimpleUser]]], day: datetime.datetime) -> str:

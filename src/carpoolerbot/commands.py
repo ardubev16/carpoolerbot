@@ -6,9 +6,12 @@ from telegram import Bot, Update, constants
 from telegram.ext import ContextTypes
 
 from carpoolerbot.actions import send_poll, send_whos_tomorrow
-from carpoolerbot.database import DbHelper, DeleteResult, InsertResult, with_db
+from carpoolerbot.database.repositories.misc import get_latest_poll
+from carpoolerbot.database.repositories.poll_answers import delete_poll_answers, get_poll_results, insert_poll_answers
+from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
+from carpoolerbot.database.repositories.user_settings import delete_designated_driver, insert_designated_driver
+from carpoolerbot.database.types import DeleteResult, PollReportType
 from carpoolerbot.message_serializers import full_poll_result, whos_on_text
-from carpoolerbot.models import PollReportType
 from carpoolerbot.schedules import jobs_exist
 
 logger = logging.getLogger(__name__)
@@ -29,26 +32,28 @@ async def poll_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await send_poll(update.get_bot(), update.effective_chat.id)
 
 
-@with_db
-async def get_poll_results_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat
 
-    latest_poll_id = db_helper.get_latest_poll_id(update.effective_chat.id)
-    if not latest_poll_id:
+    latest_poll = get_latest_poll(update.effective_chat.id)
+    if not latest_poll:
         await update.effective_chat.send_message("No Polls found.")
         return
 
-    latest_poll = db_helper.get_poll_results(latest_poll_id)
+    latest_poll_results = get_poll_results(latest_poll.poll_id)
+    assert latest_poll_results
+
     poll_report = await update.effective_chat.send_message(
-        full_poll_result(latest_poll),
+        full_poll_result(latest_poll_results),
         parse_mode=constants.ParseMode.HTML,
     )
-    db_helper.insert_poll_report(latest_poll_id, poll_report, PollReportType.FULL_WEEK)
+    insert_poll_report(latest_poll.poll_id, poll_report, PollReportType.FULL_WEEK)
 
 
-async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> None:
-    poll_reports = db_helper.get_poll_reports(poll_id)
-    latest_poll = db_helper.get_poll_results(poll_id)
+async def update_poll_reports(bot: Bot, poll_id: str) -> None:
+    poll_reports = get_poll_reports(poll_id)
+    latest_poll = get_poll_results(poll_id)
+    assert latest_poll
 
     for report in poll_reports:
         match report.message_type:
@@ -71,8 +76,7 @@ async def update_poll_reports(db_helper: DbHelper, bot: Bot, poll_id: str) -> No
             logger.info("%s %s", err, {"chat_id": report.chat_id, "message_id": report.message_id})
 
 
-@with_db
-async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.poll_answer
     assert update.poll_answer.user
 
@@ -81,35 +85,29 @@ async def handle_poll_answer(db_helper: DbHelper, update: Update, _: ContextType
     selected_options = update.poll_answer.option_ids
 
     if not selected_options:
-        db_helper.delete_poll_answers(poll_id, answering_user_id)
+        delete_poll_answers(poll_id, answering_user_id)
         logger.info("User %s retracted his vote", answering_user_id)
     else:
         logger.info("Handling poll update")
-        for option_id in selected_options:
-            db_helper.insert_poll_answer(poll_id, option_id, update.poll_answer.user)
-            logger.info("Inserted answer %s by user %s, poll_id = %s", option_id, answering_user_id, poll_id)
+        insert_poll_answers(poll_id, selected_options, update.poll_answer.user)
+        logger.info("Inserted %s answers by user %s, poll_id = %s", len(selected_options), answering_user_id, poll_id)
 
-    await update_poll_reports(db_helper, update.get_bot(), poll_id)
+    await update_poll_reports(update.get_bot(), poll_id)
 
 
-@with_db
-async def drive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def drive_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_message
     assert update.effective_user
 
-    match db_helper.insert_designated_driver(update.effective_message.chat_id, update.effective_user):
-        case InsertResult.SUCCESS:
-            await update.effective_message.reply_text("You are now a designated driver.", disable_notification=True)
-        case InsertResult.ALREADY_EXIST:
-            await update.effective_message.reply_text("You are already a designated driver.", disable_notification=True)
+    insert_designated_driver(update.effective_message.chat_id, update.effective_user)
+    await update.effective_message.reply_text("You are now a designated driver.", disable_notification=True)
 
 
-@with_db
-async def nodrive_cmd(db_helper: DbHelper, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def nodrive_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_message
     assert update.effective_user
 
-    match db_helper.delete_designated_driver(update.effective_message.chat_id, update.effective_user.id):
+    match delete_designated_driver(update.effective_message.chat_id, update.effective_user):
         case DeleteResult.DELETED:
             await update.effective_message.reply_text(
                 "You are no longer a designated driver.",
