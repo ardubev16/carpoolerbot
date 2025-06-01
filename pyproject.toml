@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "alembic==1.15.2",
+    "alembic==1.16.1",
     "apscheduler==3.10.4",
     "holidays==0.63",
     "mypy>=1.16.0",
@@ -52,3 +52,24 @@ ignore = [
     "TD002",  # Checks that a TODO comment includes an author.
     "TRY400", # Use logging.exception() instead of logging.error() for logging exceptions
 ]
+
+[tool.alembic]
+script_location = "%(here)s/alembic"
+
+# See https://alembic.sqlalchemy.org/en/latest/tutorial.html#editing-the-ini-file for all available tokens
+file_template = "%%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d_%%(rev)s"
+
+# additional paths to be prepended to sys.path. defaults to the current working directory.
+prepend_sys_path = ["."]
+
+[[tool.alembic.post_write_hooks]]
+name = "ruff-format"
+type = "exec"
+executable = "%(here)s/.venv/bin/ruff"
+options = "format REVISION_SCRIPT_FILENAME"
+
+[[tool.alembic.post_write_hooks]]
+name = "ruff-lint"
+type = "exec"
+executable = "%(here)s/.venv/bin/ruff"
+options = "check --fix REVISION_SCRIPT_FILENAME"

@@ -1,19 +1,20 @@
 """
 First revision.
 
-Revision ID: 4ba098421788
+Revision ID: 9fa0054353e1
 Revises:
-Create Date: 2025-06-02 01:19:12.471282
+Create Date: 2025-06-02 01:39:32.654076
 
 """
 
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "4ba098421788"
+revision: str = "9fa0054353e1"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
