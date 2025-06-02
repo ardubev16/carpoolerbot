@@ -37,7 +37,7 @@ def get_poll_results(poll_id: str) -> list[tuple[str, list[SimpleUser]]] | None:
 
 def delete_poll_answers(poll_id: str, user_id: int) -> None:
     with Session.begin() as s:
-        s.execute(delete(PollAnswer).where(PollAnswer.poll_id == poll_id and PollAnswer.user_id == user_id))
+        s.execute(delete(PollAnswer).where(PollAnswer.poll_id == poll_id, PollAnswer.user_id == user_id))
 
 
 def insert_poll_answers(poll_id: str, option_ids: Sequence[int], user: User) -> None:
