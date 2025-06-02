@@ -7,6 +7,7 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
+        exclude: ^\.envrc$
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
