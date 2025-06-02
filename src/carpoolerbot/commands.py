@@ -41,7 +41,7 @@ async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     latest_poll_results = get_poll_results(latest_poll.poll_id)
-    assert latest_poll_results
+    assert latest_poll_results is not None  # Should always be not None if poll exists
 
     poll_report = await update.effective_chat.send_message(
         full_poll_result(latest_poll_results),
@@ -53,10 +53,12 @@ async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
 async def update_poll_reports(bot: Bot, poll_id: str) -> None:
     poll_reports = get_poll_reports(poll_id)
     latest_poll = get_poll_results(poll_id)
-    assert latest_poll
+    if not latest_poll:
+        logger.warning("No latest poll found for poll_id %s", poll_id)
+        return
 
     for report in poll_reports:
-        match report.message_type:
+        match PollReportType(report.message_type):
             case PollReportType.SINGLE_DAY:
                 day_after_sent_report = datetime.datetime.fromtimestamp(report.sent_timestamp) + datetime.timedelta(
                     days=1,

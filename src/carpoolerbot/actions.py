@@ -19,7 +19,7 @@ async def send_whos_tomorrow(bot: Bot, chat_id: int) -> None:
         return
 
     latest_poll_results = get_poll_results(latest_poll.poll_id)
-    assert latest_poll_results  # We already checked that latest_poll exists, so results must be there
+    assert latest_poll_results is not None  # Should always be not None if poll exists
 
     tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
 
