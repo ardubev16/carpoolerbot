@@ -78,7 +78,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = "==1.16.1" },
     { name = "apscheduler", specifier = "==3.11.0" },
-    { name = "holidays", specifier = "==0.73" },
+    { name = "holidays", specifier = "==0.74" },
     { name = "pydantic", specifier = "==2.11.5" },
     { name = "pydantic-settings", specifier = "==2.9.1" },
     { name = "python-telegram-bot", extras = ["job-queue"], specifier = "==22.1" },
@@ -144,14 +144,14 @@ wheels = [
 
 [[package]]
 name = "holidays"
-version = "0.73"
+version = "0.74"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/48/6d0ef4f014d06cde97772f5cc6bf9befdfbd5b23050014de163a5e8e6848/holidays-0.73.tar.gz", hash = "sha256:36fd6ac8c340658bed0b3cc4e0b476b3726ff0c8f2cd384f4a1adbbfc9d0cef2", size = 599529, upload-time = "2025-05-19T18:03:11.3Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/55/67/d7aa1b268d7d9ed145e3a18a549d5e4622d1115fb1228df99e31601a2a80/holidays-0.74.tar.gz", hash = "sha256:cc6653e107bd08336a7dca3aff76eecf51cf2a9a7cce3227a0f929c8104d3a07", size = 623732, upload-time = "2025-06-02T18:30:05.111Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/9c/01da17421bd6a0aa230839b8313fa1615c81555f94954350fca4f4b7f129/holidays-0.73-py3-none-any.whl", hash = "sha256:2baec1a0e66d89777a824be616141f9aff75fc90d9efeb2e10281bdeb2f5b965", size = 954803, upload-time = "2025-05-19T18:03:08.892Z" },
+    { url = "https://files.pythonhosted.org/packages/19/d0/ba795addc22473f033883f2d2048a573a414c24d4f47399090daa9fcf977/holidays-0.74-py3-none-any.whl", hash = "sha256:266bc4e5ef13cba12750ce2e2d5036f93b087312ed230c349353c1fe192453c0", size = 990979, upload-time = "2025-06-02T18:30:03.399Z" },
 ]
 
 [[package]]
