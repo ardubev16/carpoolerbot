@@ -84,7 +84,7 @@ requires-dist = [
     { name = "mypy", specifier = ">=1.16.0" },
     { name = "pydantic", specifier = "==2.11.4" },
     { name = "pydantic-settings", specifier = "==2.7.0" },
-    { name = "python-telegram-bot", extras = ["job-queue"], specifier = "==21.9" },
+    { name = "python-telegram-bot", extras = ["job-queue"], specifier = "==22.1" },
     { name = "sqlalchemy", specifier = "==2.0.36" },
 ]
 
@@ -379,20 +379,19 @@ wheels = [
 
 [[package]]
 name = "python-telegram-bot"
-version = "21.9"
+version = "22.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/a6/369aa090e2c2d34bcfbeadd7d8c75ca2f771424c1a985a98a0adb3712463/python_telegram_bot-21.9.tar.gz", hash = "sha256:82588faca44069492b2aea7f3a5d6212e68884f296b9ccd444658d89170f158d", size = 436648, upload-time = "2024-12-07T12:41:40.208Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/35/2f/52ad8a19b75a6b5c9525abce9e3d9c57dfe21c29a4723ba2aeeb2c611a9d/python_telegram_bot-22.1.tar.gz", hash = "sha256:b6c7fc1f3635cef6aff0c431827407cafde183e7e1992060edeacc2bf08d23d8", size = 459976, upload-time = "2025-05-15T20:21:23.976Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/4e/b94c6925e3d75a07c3bc8e3f96234c926f627e7ddd05bbf2878e93b3fc15/python_telegram_bot-21.9-py3-none-any.whl", hash = "sha256:6a5e71056fbd138c78dbdefa3c7834d77022622997c60003c9b442061ee91633", size = 662715, upload-time = "2024-12-07T12:41:37.779Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/7b/b06663b3563299e15dac0b3a2044830db35c676753caeb45ae0acbf029a9/python_telegram_bot-22.1-py3-none-any.whl", hash = "sha256:71afd091fde9037ac44728c2768eb958682140dcc350900a191da0e9cef319d3", size = 702289, upload-time = "2025-05-15T20:21:21.12Z" },
 ]
 
 [package.optional-dependencies]
 job-queue = [
     { name = "apscheduler" },
-    { name = "pytz" },
 ]
 
 [[package]]
