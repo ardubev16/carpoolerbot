@@ -62,7 +62,6 @@ dependencies = [
     { name = "alembic" },
     { name = "apscheduler" },
     { name = "holidays" },
-    { name = "mypy" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-telegram-bot", extra = ["job-queue"] },
@@ -71,6 +70,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mypy" },
     { name = "ruff" },
 ]
 
@@ -79,7 +79,6 @@ requires-dist = [
     { name = "alembic", specifier = "==1.16.1" },
     { name = "apscheduler", specifier = "==3.11.0" },
     { name = "holidays", specifier = "==0.73" },
-    { name = "mypy", specifier = ">=1.16.0" },
     { name = "pydantic", specifier = "==2.11.5" },
     { name = "pydantic-settings", specifier = "==2.9.1" },
     { name = "python-telegram-bot", extras = ["job-queue"], specifier = "==22.1" },
@@ -87,7 +86,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = "==0.11.12" }]
+dev = [
+    { name = "mypy", specifier = "==1.16.0" },
+    { name = "ruff", specifier = "==0.11.12" },
+]
 
 [[package]]
 name = "certifi"
