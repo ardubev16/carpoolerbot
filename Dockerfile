@@ -22,10 +22,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12.8-slim-bookworm
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    dumb-init=1.2.5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app /app
-COPY alembic alembic.ini entrypoint.sh ./
+COPY alembic.ini entrypoint.sh ./
+COPY alembic ./alembic
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["carpoolerbot"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/app/entrypoint.sh"]
