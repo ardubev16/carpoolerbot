@@ -36,7 +36,7 @@ class Poll(Base):
     poll_id: Mapped[str] = mapped_column(primary_key=True)
     options: Mapped[list[str]] = mapped_column(JSON)
 
-    poll_resports: Mapped[list[PollReport]] = relationship(back_populates="poll")
+    poll_reports: Mapped[list[PollReport]] = relationship(back_populates="poll")
     poll_answers: Mapped[list[PollAnswer]] = relationship(back_populates="poll")
 
 
@@ -49,7 +49,7 @@ class PollReport(Base):
     sent_timestamp: Mapped[int]
     message_type: Mapped[int]
 
-    poll: Mapped[Poll] = relationship(back_populates="poll_resports")
+    poll: Mapped[Poll] = relationship(back_populates="poll_reports")
 
 
 class PollAnswer(Base):
