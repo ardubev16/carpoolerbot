@@ -11,14 +11,14 @@ dependencies = [
     "alembic==1.16.1",
     "apscheduler==3.11.0",
     "holidays==0.74",
-    "pydantic==2.11.5",
+    "pydantic==2.11.7",
     "pydantic-settings==2.9.1",
     "python-telegram-bot[job-queue]==22.1",
     "sqlalchemy==2.0.41",
 ]
 
 [dependency-groups]
-dev = ["mypy==1.16.0", "ruff==0.11.12"]
+dev = ["mypy==1.16.0", "ruff==0.11.13"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
