@@ -28,7 +28,15 @@ async def poll_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
 
-    await update.effective_message.delete()
+    try:
+        await update.effective_message.delete()
+    except telegram.error.BadRequest:
+        await update.effective_chat.send_message(
+            "I don't have permission to delete messages in this chat.",
+            disable_notification=True,
+        )
+        return
+
     await send_poll(update.get_bot(), update.effective_chat.id)
 
 
