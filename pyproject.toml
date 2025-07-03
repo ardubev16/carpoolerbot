@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["mypy==1.16.1", "ruff==0.12.1"]
+dev = ["mypy==1.16.1", "ruff==0.12.2"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
