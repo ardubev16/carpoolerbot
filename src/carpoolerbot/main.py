@@ -6,6 +6,7 @@ from telegram.ext import Application, CommandHandler, PollAnswerHandler
 from carpoolerbot import commands, schedules
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
 from carpoolerbot.settings import settings
+from carpoolerbot.utils import version_command_handler
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ async def _set_commands(app: Application) -> None:
             ("nodrive", "Remove you from the Designated Driver list."),
             ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at set time."),
             ("disable_schedule", "Disable automatic messages."),
+            ("version", "Display bot version"),
         ),
     )
 
@@ -44,5 +46,6 @@ def main() -> None:
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(commands.handle_poll_answer))
+    application.add_handler(version_command_handler())
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
