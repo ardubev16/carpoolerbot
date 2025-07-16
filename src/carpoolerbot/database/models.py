@@ -61,12 +61,3 @@ class PollAnswer(Base):
 
     user: Mapped[DbUser] = relationship()
     poll: Mapped[Poll] = relationship(back_populates="poll_answers")
-
-
-class DesignatedDriver(Base):
-    __tablename__ = "designated_drivers"
-
-    chat_id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
-
-    user: Mapped[DbUser] = relationship()

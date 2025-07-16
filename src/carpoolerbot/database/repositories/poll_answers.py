@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 from telegram import User
 
 from carpoolerbot.database import Session
-from carpoolerbot.database.models import DbUser, DesignatedDriver, Poll, PollAnswer
+from carpoolerbot.database.models import DbUser, Poll, PollAnswer
 from carpoolerbot.database.types import SimpleUser
 
 
@@ -21,15 +21,10 @@ def get_poll_results(poll_id: str) -> list[tuple[str, list[SimpleUser]]] | None:
     if not poll:
         return None
 
-    with Session() as s:
-        designated_driver_ids = s.scalars(
-            select(DesignatedDriver.user_id).where(DesignatedDriver.chat_id == poll.chat_id),
-        ).all()
-
     users_by_option: list[list[SimpleUser]] = [[] for _ in poll.options]
     for answer in poll.poll_answers:
         user = answer.user
-        is_driver = user.user_id in designated_driver_ids
+        is_driver = False
         users_by_option[answer.option_id].append(SimpleUser(user.user_id, user.user_fullname, is_driver))
 
     return list(zip(poll.options, users_by_option, strict=True))

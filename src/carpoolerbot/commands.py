@@ -9,8 +9,7 @@ from carpoolerbot.actions import send_poll, send_whos_tomorrow
 from carpoolerbot.database.repositories.misc import get_latest_poll
 from carpoolerbot.database.repositories.poll_answers import delete_poll_answers, get_poll_results, insert_poll_answers
 from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
-from carpoolerbot.database.repositories.user_settings import delete_designated_driver, insert_designated_driver
-from carpoolerbot.database.types import DeleteResult, PollReportType
+from carpoolerbot.database.types import PollReportType
 from carpoolerbot.message_serializers import full_poll_result, whos_on_text
 from carpoolerbot.schedules import jobs_exist
 
@@ -103,28 +102,6 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
         logger.info("Inserted %s answers by user %s, poll_id = %s", len(selected_options), answering_user_id, poll_id)
 
     await update_poll_reports(update.get_bot(), poll_id)
-
-
-async def drive_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_message
-    assert update.effective_user
-
-    insert_designated_driver(update.effective_message.chat_id, update.effective_user)
-    await update.effective_message.reply_text("You are now a designated driver.", disable_notification=True)
-
-
-async def nodrive_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_message
-    assert update.effective_user
-
-    match delete_designated_driver(update.effective_message.chat_id, update.effective_user):
-        case DeleteResult.DELETED:
-            await update.effective_message.reply_text(
-                "You are no longer a designated driver.",
-                disable_notification=True,
-            )
-        case DeleteResult.NOT_FOUND:
-            await update.effective_message.reply_text("You were not a designated driver.", disable_notification=True)
 
 
 async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:

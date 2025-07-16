@@ -1,10 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum, IntEnum, auto
-
-
-class DeleteResult(Enum):
-    DELETED = auto()
-    NOT_FOUND = auto()
+from enum import IntEnum, auto
 
 
 @dataclass

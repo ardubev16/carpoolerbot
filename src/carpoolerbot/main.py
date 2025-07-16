@@ -17,8 +17,6 @@ async def _set_commands(app: Application) -> None:
             ("poll", "Manually send the weekly Poll."),
             ("get_poll_results", "Get results to last Poll."),
             ("whos_tomorrow", "Return the people on site tomorrow."),
-            ("drive", "Show you as a Designated Driver."),
-            ("nodrive", "Remove you from the Designated Driver list."),
             ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at set time."),
             ("disable_schedule", "Disable automatic messages."),
             ("version", "Display bot version"),
@@ -41,8 +39,6 @@ def main() -> None:
     application.add_handler(CommandHandler("poll", commands.poll_cmd))
     application.add_handler(CommandHandler("get_poll_results", commands.get_poll_results_cmd))
     application.add_handler(CommandHandler("whos_tomorrow", commands.whos_tomorrow_cmd))
-    application.add_handler(CommandHandler("drive", commands.drive_cmd))
-    application.add_handler(CommandHandler("nodrive", commands.nodrive_cmd))
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(commands.handle_poll_answer))
