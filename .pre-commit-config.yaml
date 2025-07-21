@@ -17,22 +17,22 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.5
+    rev: v1.7.7
     hooks:
       - id: actionlint
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.3.0
+    rev: 3.4.2
     hooks:
       - id: sqlfluff-fix
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.12.4
     hooks:
       # Run the linter.
       - id: ruff
@@ -43,11 +43,11 @@ repos:
         types_or: [python, pyi]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.5.13
+    rev: 0.8.0
     hooks:
       - id: uv-lock
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.22.1
+    rev: v8.28.0
     hooks:
       - id: gitleaks
