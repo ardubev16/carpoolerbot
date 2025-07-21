@@ -13,8 +13,7 @@ from carpoolerbot.database.repositories.poll_answers import (
     set_override_answer,
     set_return_time,
 )
-from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
-from carpoolerbot.database.types import PollReportType
+from carpoolerbot.database.repositories.poll_reports import get_all_poll_reports, get_poll_report, insert_poll_report
 from carpoolerbot.message_serializers import full_poll_result, whos_on_text
 
 logger = logging.getLogger(__name__)
@@ -52,21 +51,21 @@ DAILY_MSG_KEYBOARD_DEFAULT = [
 
 
 async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
-    poll_reports = get_poll_reports(poll_id)
+    poll_reports = get_all_poll_reports(poll_id)
     latest_poll = get_all_poll_answers(poll_id)
 
     for report in poll_reports:
-        match PollReportType(report.message_type):
-            case PollReportType.SINGLE_DAY:
+        match report.poll_option_id:
+            case None:
+                text = full_poll_result(latest_poll)
+                reply_markup = None
+
+            case _:
                 day_after_sent_report = datetime.datetime.fromtimestamp(report.sent_timestamp) + datetime.timedelta(
                     days=1,
                 )
                 text = whos_on_text(latest_poll, day_after_sent_report)
                 reply_markup = InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT)
-
-            case PollReportType.FULL_WEEK:
-                text = full_poll_result(latest_poll)
-                reply_markup = None
 
         try:
             await bot.edit_message_text(
@@ -98,23 +97,24 @@ async def send_daily_poll_report(bot: telegram.Bot, chat_id: int) -> None:
         reply_markup=InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT),
     )
 
-    insert_poll_report(latest_poll.poll_id, poll_report, PollReportType.SINGLE_DAY)
+    insert_poll_report(latest_poll.poll_id, poll_report, poll_option_id=tomorrow.weekday())
 
 
 async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    raise NotImplementedError
-
-    assert update.effective_user
     assert update.callback_query
+    assert update.effective_chat
+    assert update.effective_message
+    assert update.effective_user
 
-    query = update.callback_query
-
-    # 1. get poll_id, poll_option_id
     user_id = update.effective_user.id
-    poll_id = None
-    poll_option_id = None
 
-    match DailyReportCommands(query.data):
+    poll_report = get_poll_report(update.effective_chat.id, update.effective_message.id)
+    poll_id = poll_report.poll_id
+    poll_option_id = poll_report.poll_option_id
+
+    assert poll_option_id  # This should always be set for daily reports
+
+    match DailyReportCommands(update.callback_query.data):
         case DailyReportCommands.CONFIRM:
             set_override_answer(user_id, poll_id, poll_option_id, value=True)
         case DailyReportCommands.REJECT:
@@ -128,6 +128,6 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
         case DailyReportCommands.LATE:
             set_return_time(user_id, poll_id, poll_option_id, ReturnTime.LATE)
 
-    await query.answer()
+    await update.callback_query.answer()
 
     await update_poll_reports(update.get_bot(), poll_id)

@@ -46,8 +46,8 @@ class PollReport(Base):
     poll_id: Mapped[str] = mapped_column(ForeignKey("polls.poll_id"))
     chat_id: Mapped[int] = mapped_column(primary_key=True)
     message_id: Mapped[int] = mapped_column(primary_key=True)
+    poll_option_id: Mapped[int | None]
     sent_timestamp: Mapped[int]
-    message_type: Mapped[int]
 
     poll: Mapped[Poll] = relationship(back_populates="poll_reports")
 

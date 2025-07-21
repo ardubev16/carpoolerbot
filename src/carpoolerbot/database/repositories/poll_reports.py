@@ -5,22 +5,37 @@ from telegram import Message
 
 from carpoolerbot.database.models import PollReport
 from carpoolerbot.database.session import Session
-from carpoolerbot.database.types import PollReportType
 
 
-def insert_poll_report(poll_id: str, report_message: Message, report_type: PollReportType) -> None:
+def insert_poll_report(poll_id: str, message: Message, *, poll_option_id: int | None) -> None:
     with Session.begin() as s:
         s.add(
             PollReport(
                 poll_id=poll_id,
-                chat_id=report_message.chat_id,
-                message_id=report_message.id,
-                sent_timestamp=report_message.date.timestamp(),
-                message_type=report_type,
+                poll_option_id=poll_option_id,
+                chat_id=message.chat_id,
+                message_id=message.id,
+                sent_timestamp=message.date.timestamp(),
             ),
         )
 
 
-def get_poll_reports(poll_id: str) -> Sequence[PollReport]:
+def get_all_poll_reports(poll_id: str) -> Sequence[PollReport]:
     with Session() as s:
         return s.scalars(select(PollReport).where(PollReport.poll_id == poll_id)).all()
+
+
+def get_poll_report(chat_id: int, message_id: int) -> PollReport:
+    with Session() as s:
+        report = s.scalar(
+            select(PollReport).where(
+                PollReport.chat_id == chat_id,
+                PollReport.message_id == message_id,
+            ),
+        )
+
+    if report is None:
+        msg = f"Poll report not found for chat_id {chat_id} and message_id {message_id}."
+        raise ValueError(msg)
+
+    return report
