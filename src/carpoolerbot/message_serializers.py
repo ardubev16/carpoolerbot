@@ -6,7 +6,7 @@ from collections.abc import Sequence
 import holidays
 
 from carpoolerbot.database.models import PollAnswer
-from carpoolerbot.utils import ReturnTime
+from carpoolerbot.poll_reports import ReturnTime
 
 
 def format_user_answer(answer: PollAnswer) -> str:

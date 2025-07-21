@@ -14,7 +14,7 @@ from carpoolerbot.database.repositories.poll_answers import (
 from carpoolerbot.database.repositories.poll_reports import insert_poll_report
 from carpoolerbot.database.types import PollReportType
 from carpoolerbot.message_serializers import full_poll_result
-from carpoolerbot.poll_reports import send_whos_tomorrow, update_poll_reports
+from carpoolerbot.poll_reports import send_daily_poll_report, update_poll_reports
 from carpoolerbot.schedules import jobs_exist
 
 logger = logging.getLogger(__name__)
@@ -82,4 +82,4 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
 async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.effective_chat
 
-    await send_whos_tomorrow(update.get_bot(), update.effective_chat.id)
+    await send_daily_poll_report(update.get_bot(), update.effective_chat.id)

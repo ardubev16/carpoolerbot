@@ -1,10 +1,11 @@
 import logging
 
 from telegram import Update
-from telegram.ext import Application, CommandHandler, PollAnswerHandler
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, PollAnswerHandler
 
 from carpoolerbot import commands, schedules
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
+from carpoolerbot.poll_reports import daily_poll_report_callback_handler
 from carpoolerbot.settings import settings
 from carpoolerbot.utils import version_command_handler
 
@@ -42,6 +43,7 @@ def main() -> None:
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(commands.handle_poll_answer))
+    application.add_handler(CallbackQueryHandler(daily_poll_report_callback_handler, r"daily_msg:.+"))
     application.add_handler(version_command_handler())
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)

@@ -1,16 +1,54 @@
 import datetime
 import logging
+from enum import IntEnum, StrEnum
 
 import telegram
-from telegram import constants
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, constants
+from telegram.ext import ContextTypes
 
 from carpoolerbot.database.repositories.misc import get_latest_poll
-from carpoolerbot.database.repositories.poll_answers import get_all_poll_answers
+from carpoolerbot.database.repositories.poll_answers import (
+    get_all_poll_answers,
+    set_driver_id,
+    set_override_answer,
+    set_return_time,
+)
 from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
 from carpoolerbot.database.types import PollReportType
 from carpoolerbot.message_serializers import full_poll_result, whos_on_text
 
 logger = logging.getLogger(__name__)
+
+
+class DailyReportCommands(StrEnum):
+    CONFIRM = "daily_msg:confirm"
+    REJECT = "daily_msg:reject"
+    DRIVE = "daily_msg:drive"
+    WORK = "daily_msg:return:work"
+    DINNER = "daily_msg:return:dinner"
+    LATE = "daily_msg:return:late"
+
+
+class ReturnTime(IntEnum):
+    """Enum representing the return time options for the daily message."""
+
+    AFTER_WORK = 0
+    AFTER_DINNER = 1
+    LATE = 2
+
+
+DAILY_MSG_KEYBOARD_DEFAULT = [
+    [
+        InlineKeyboardButton("✅", callback_data=DailyReportCommands.CONFIRM),
+        InlineKeyboardButton("🚗", callback_data=DailyReportCommands.DRIVE),
+        InlineKeyboardButton("❌", callback_data=DailyReportCommands.REJECT),
+    ],
+    [
+        InlineKeyboardButton("💼", callback_data=DailyReportCommands.WORK),
+        InlineKeyboardButton("🍽", callback_data=DailyReportCommands.DINNER),
+        InlineKeyboardButton("🎯", callback_data=DailyReportCommands.LATE),
+    ],
+]
 
 
 async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
@@ -24,8 +62,11 @@ async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
                     days=1,
                 )
                 text = whos_on_text(latest_poll, day_after_sent_report)
+                reply_markup = InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT)
+
             case PollReportType.FULL_WEEK:
                 text = full_poll_result(latest_poll)
+                reply_markup = None
 
         try:
             await bot.edit_message_text(
@@ -33,12 +74,13 @@ async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
                 message_id=report.message_id,
                 text=text,
                 parse_mode=constants.ParseMode.HTML,
+                reply_markup=reply_markup,
             )
         except telegram.error.BadRequest as err:
             logger.info("%s %s", err, {"chat_id": report.chat_id, "message_id": report.message_id})
 
 
-async def send_whos_tomorrow(bot: telegram.Bot, chat_id: int) -> None:
+async def send_daily_poll_report(bot: telegram.Bot, chat_id: int) -> None:
     latest_poll = get_latest_poll(chat_id)
 
     if not latest_poll:
@@ -53,6 +95,39 @@ async def send_whos_tomorrow(bot: telegram.Bot, chat_id: int) -> None:
         chat_id,
         whos_on_text(latest_poll_results, tomorrow),
         parse_mode=constants.ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT),
     )
 
     insert_poll_report(latest_poll.poll_id, poll_report, PollReportType.SINGLE_DAY)
+
+
+async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    raise NotImplementedError
+
+    assert update.effective_user
+    assert update.callback_query
+
+    query = update.callback_query
+
+    # 1. get poll_id, poll_option_id
+    user_id = update.effective_user.id
+    poll_id = None
+    poll_option_id = None
+
+    match DailyReportCommands(query.data):
+        case DailyReportCommands.CONFIRM:
+            set_override_answer(user_id, poll_id, poll_option_id, value=True)
+        case DailyReportCommands.REJECT:
+            set_override_answer(user_id, poll_id, poll_option_id, value=False)
+        case DailyReportCommands.DRIVE:
+            set_driver_id(user_id, poll_id, poll_option_id, user_id)
+        case DailyReportCommands.WORK:
+            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_WORK)
+        case DailyReportCommands.DINNER:
+            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_DINNER)
+        case DailyReportCommands.LATE:
+            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.LATE)
+
+    await query.answer()
+
+    await update_poll_reports(update.get_bot(), poll_id)

@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
 from carpoolerbot.actions import send_poll
-from carpoolerbot.poll_reports import send_whos_tomorrow
+from carpoolerbot.poll_reports import send_daily_poll_report
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ async def send_whos_tomorrow_callback(context: CallbackContext) -> None:
     assert context.job
     assert context.job.chat_id
 
-    await send_whos_tomorrow(context.bot, context.job.chat_id)
+    await send_daily_poll_report(context.bot, context.job.chat_id)
 
 
 async def send_poll_callback(context: CallbackContext) -> None:

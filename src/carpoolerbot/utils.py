@@ -1,5 +1,3 @@
-from enum import IntEnum
-
 from telegram import Update, constants
 from telegram.ext import CommandHandler, ContextTypes
 
@@ -22,11 +20,3 @@ To see what's changed checkout the <a href='{release_notes_url}'>Release Notes</
         )
 
     return CommandHandler("version", _version_cmd)
-
-
-class ReturnTime(IntEnum):
-    """Enum representing the return time options for the daily message."""
-
-    AFTER_WORK = 0
-    AFTER_DINNER = 1
-    LATE = 2

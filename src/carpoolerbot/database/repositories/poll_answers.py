@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import DbUser, Poll, PollAnswer
+from carpoolerbot.poll_reports import ReturnTime
 
 
 def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
@@ -50,3 +51,60 @@ def insert_poll_answers(poll_id: str, selected_options: Sequence[int], user: tel
     with Session.begin() as s:
         s.merge(DbUser.from_telegram_user(user))
         s.add_all(answers)
+
+
+def set_override_answer(user_id: int, poll_id: str, poll_option_id: int, *, value: bool) -> None:
+    with Session() as s:
+        poll_answer = s.scalars(
+            select(PollAnswer).where(
+                PollAnswer.user_id == user_id,
+                PollAnswer.poll_id == poll_id,
+                PollAnswer.poll_option_id == poll_option_id,
+            ),
+        ).first()
+
+    if not poll_answer:
+        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
+        raise ValueError(msg)
+
+    with Session.begin() as s:
+        poll_answer.override_answer = value
+        s.add(poll_answer)
+
+
+def set_return_time(user_id: int, poll_id: str, poll_option_id: int, return_time: ReturnTime) -> None:
+    with Session() as s:
+        poll_answer = s.scalars(
+            select(PollAnswer).where(
+                PollAnswer.user_id == user_id,
+                PollAnswer.poll_id == poll_id,
+                PollAnswer.poll_option_id == poll_option_id,
+            ),
+        ).first()
+
+    if not poll_answer:
+        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
+        raise ValueError(msg)
+
+    with Session.begin() as s:
+        poll_answer.return_time = return_time
+        s.add(poll_answer)
+
+
+def set_driver_id(user_id: int, poll_id: str, poll_option_id: int, driver_id: int) -> None:
+    with Session() as s:
+        poll_answer = s.scalars(
+            select(PollAnswer).where(
+                PollAnswer.user_id == user_id,
+                PollAnswer.poll_id == poll_id,
+                PollAnswer.poll_option_id == poll_option_id,
+            ),
+        ).first()
+
+    if not poll_answer:
+        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
+        raise ValueError(msg)
+
+    with Session.begin() as s:
+        poll_answer.driver_id = driver_id
+        s.add(poll_answer)
