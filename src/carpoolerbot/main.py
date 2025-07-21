@@ -5,7 +5,8 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Poll
 
 from carpoolerbot import commands, schedules
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
-from carpoolerbot.poll_reports import DailyReportCommands, daily_poll_report_callback_handler
+from carpoolerbot.poll_reports.handlers import daily_poll_report_callback_handler
+from carpoolerbot.poll_reports.types import DailyReportCommands
 from carpoolerbot.settings import settings
 from carpoolerbot.utils import version_command_handler
 

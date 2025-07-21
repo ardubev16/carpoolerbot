@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import DbUser, Poll, PollAnswer
-from carpoolerbot.poll_reports import ReturnTime
+from carpoolerbot.poll_reports.types import ReturnTime
 
 
 def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:

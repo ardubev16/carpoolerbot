@@ -12,8 +12,8 @@ from carpoolerbot.database.repositories.poll_answers import (
     insert_poll_answers,
 )
 from carpoolerbot.database.repositories.poll_reports import insert_poll_report
-from carpoolerbot.message_serializers import full_poll_result
-from carpoolerbot.poll_reports import send_daily_poll_report, update_poll_reports
+from carpoolerbot.poll_reports.handlers import send_daily_poll_report, update_poll_reports
+from carpoolerbot.poll_reports.message_serializers import full_poll_result
 from carpoolerbot.schedules import jobs_exist
 
 logger = logging.getLogger(__name__)
