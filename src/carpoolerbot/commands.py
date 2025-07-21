@@ -1,20 +1,20 @@
-import datetime
 import logging
 
 import telegram
-from telegram import Bot, Update, constants
+from telegram import Update, constants
 from telegram.ext import ContextTypes
 
-from carpoolerbot.actions import send_poll, send_whos_tomorrow
+from carpoolerbot.actions import send_poll
 from carpoolerbot.database.repositories.misc import get_latest_poll
 from carpoolerbot.database.repositories.poll_answers import (
     delete_poll_answers,
     get_all_poll_answers,
     insert_poll_answers,
 )
-from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
+from carpoolerbot.database.repositories.poll_reports import insert_poll_report
 from carpoolerbot.database.types import PollReportType
-from carpoolerbot.message_serializers import full_poll_result, whos_on_text
+from carpoolerbot.message_serializers import full_poll_result
+from carpoolerbot.poll_reports import send_whos_tomorrow, update_poll_reports
 from carpoolerbot.schedules import jobs_exist
 
 logger = logging.getLogger(__name__)
@@ -58,31 +58,6 @@ async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
         parse_mode=constants.ParseMode.HTML,
     )
     insert_poll_report(latest_poll.poll_id, poll_report, PollReportType.FULL_WEEK)
-
-
-async def update_poll_reports(bot: Bot, poll_id: str) -> None:
-    poll_reports = get_poll_reports(poll_id)
-    latest_poll = get_all_poll_answers(poll_id)
-
-    for report in poll_reports:
-        match PollReportType(report.message_type):
-            case PollReportType.SINGLE_DAY:
-                day_after_sent_report = datetime.datetime.fromtimestamp(report.sent_timestamp) + datetime.timedelta(
-                    days=1,
-                )
-                text = whos_on_text(latest_poll, day_after_sent_report)
-            case PollReportType.FULL_WEEK:
-                text = full_poll_result(latest_poll)
-
-        try:
-            await bot.edit_message_text(
-                chat_id=report.chat_id,
-                message_id=report.message_id,
-                text=text,
-                parse_mode=constants.ParseMode.HTML,
-            )
-        except telegram.error.BadRequest as err:
-            logger.info("%s %s", err, {"chat_id": report.chat_id, "message_id": report.message_id})
 
 
 async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:

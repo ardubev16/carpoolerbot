@@ -1,34 +1,8 @@
-import datetime
-
-from telegram import Bot, constants
+from telegram import Bot
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import Poll
 from carpoolerbot.database.repositories.misc import get_latest_poll
-from carpoolerbot.database.repositories.poll_answers import get_all_poll_answers
-from carpoolerbot.database.repositories.poll_reports import insert_poll_report
-from carpoolerbot.database.types import PollReportType
-from carpoolerbot.message_serializers import whos_on_text
-
-
-async def send_whos_tomorrow(bot: Bot, chat_id: int) -> None:
-    latest_poll = get_latest_poll(chat_id)
-
-    if not latest_poll:
-        await bot.send_message(chat_id, "No Polls found.")
-        return
-
-    latest_poll_results = get_all_poll_answers(latest_poll.poll_id)
-
-    tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
-
-    poll_report = await bot.send_message(
-        chat_id,
-        whos_on_text(latest_poll_results, tomorrow),
-        parse_mode=constants.ParseMode.HTML,
-    )
-
-    insert_poll_report(latest_poll.poll_id, poll_report, PollReportType.SINGLE_DAY)
 
 
 async def send_poll(bot: Bot, chat_id: int) -> None:
