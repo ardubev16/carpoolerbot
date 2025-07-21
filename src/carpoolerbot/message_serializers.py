@@ -1,36 +1,81 @@
 import calendar
 import datetime
+from collections import defaultdict
+from collections.abc import Sequence
 
 import holidays
 
-from carpoolerbot.database.types import SimpleUser
+from carpoolerbot.database.models import PollAnswer
+from carpoolerbot.utils import ReturnTime
 
 
-def whos_on_text(latest_poll: list[tuple[str, list[SimpleUser]]], day: datetime.datetime) -> str:
+def format_user_answer(answer: PollAnswer) -> str:
+    formatted_user = answer.user.user_fullname
+
+    if answer.override_answer is False:
+        formatted_user = f"<s>{formatted_user}</s>"
+
+    if answer.driver_id == answer.user_id:
+        formatted_user = f"🚗 {formatted_user}"
+
+    match ReturnTime(answer.return_time):
+        case ReturnTime.AFTER_WORK:
+            pass
+        case ReturnTime.AFTER_DINNER:
+            formatted_user = f"🍽 {formatted_user}"
+        case ReturnTime.LATE:
+            formatted_user = f"🎯 {formatted_user}"
+
+    return f'<a href="tg://user?id={answer.user_id}">{formatted_user}</a>'
+
+
+def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> str:
     day_of_the_week = day.weekday()
+
     if day_of_the_week in (calendar.SATURDAY, calendar.SUNDAY):
         return "You are not working tomorrow, are you?"
+
+    day_name = calendar.day_name[day_of_the_week]
 
     # TODO: hardcoded country and subdiv, would be nice if it was configurable
     # https://github.com/ardubev16/carpoolerbot/issues/7
     if holiday := holidays.country_holidays("IT", subdiv="BZ").get(day):
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
-    day_name, users = latest_poll[day_of_the_week]
-    if len(users) == 0:
+    relevant_answers = list(
+        filter(
+            lambda x: x.poll_option_id == day_of_the_week and (x.poll_answer or x.override_answer),
+            poll_answers,
+        ),
+    )
+    if len(relevant_answers) == 0:
         return f"Nobody is going on site on <b>{day_name}</b>."
+
+    formatted_users = [
+        format_user_answer(answer) for answer in sorted(relevant_answers, key=lambda x: x.user.user_fullname.lower())
+    ]
 
     return f"""\
 On <b>{day_name}</b> is going on site:
 
-{"\n".join(user.mention_html() for user in users)}"""
+{"\n".join(formatted_users)}"""
 
 
-def full_poll_result(latest_poll: list[tuple[str, list[SimpleUser]]]) -> str:
-    days: list[str] = []
-    for option, users in latest_poll:
-        days.append(f"""\
-<b>{option}:</b>
-  {"\n  ".join(user.mention_html() for user in users)}""")
+def full_poll_result(poll_answers: Sequence[PollAnswer]) -> str:
+    grouped_answers: dict[int, list[PollAnswer]] = defaultdict(list)
+    for answer in poll_answers:
+        grouped_answers[answer.poll_option_id].append(answer)
 
-    return "\n\n".join(days)
+    formatted_days_answers = [
+        f"<b>{calendar.day_name[day]}</b>:\n"
+        + "\n".join(
+            format_user_answer(answer)
+            for answer in sorted(
+                filter(lambda x: x.poll_answer or x.override_answer, answers),
+                key=lambda x: x.user.user_fullname.lower(),
+            )
+        )
+        for day, answers in sorted(grouped_answers.items(), key=lambda x: x[0])
+    ]
+
+    return "\n\n".join(formatted_days_answers)

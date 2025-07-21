@@ -5,7 +5,7 @@ from telegram import Bot, constants
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import Poll
 from carpoolerbot.database.repositories.misc import get_latest_poll
-from carpoolerbot.database.repositories.poll_answers import get_poll_results
+from carpoolerbot.database.repositories.poll_answers import get_all_poll_answers
 from carpoolerbot.database.repositories.poll_reports import insert_poll_report
 from carpoolerbot.database.types import PollReportType
 from carpoolerbot.message_serializers import whos_on_text
@@ -18,8 +18,7 @@ async def send_whos_tomorrow(bot: Bot, chat_id: int) -> None:
         await bot.send_message(chat_id, "No Polls found.")
         return
 
-    latest_poll_results = get_poll_results(latest_poll.poll_id)
-    assert latest_poll_results is not None  # Should always be not None if poll exists
+    latest_poll_results = get_all_poll_answers(latest_poll.poll_id)
 
     tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
 

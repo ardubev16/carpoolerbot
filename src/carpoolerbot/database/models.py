@@ -55,9 +55,14 @@ class PollReport(Base):
 class PollAnswer(Base):
     __tablename__ = "poll_answers"
 
-    poll_id: Mapped[str] = mapped_column(ForeignKey("polls.poll_id"), primary_key=True)
-    option_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
+    poll_id: Mapped[str] = mapped_column(ForeignKey("polls.poll_id"), primary_key=True)
+    poll_option_id: Mapped[int] = mapped_column(primary_key=True)
+    poll_answer: Mapped[bool]
+
+    override_answer: Mapped[bool | None] = mapped_column(default=None)
+    driver_id: Mapped[int | None] = mapped_column(default=None)
+    return_time: Mapped[int]
 
     user: Mapped[DbUser] = relationship()
     poll: Mapped[Poll] = relationship(back_populates="poll_answers")

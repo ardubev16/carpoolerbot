@@ -7,7 +7,11 @@ from telegram.ext import ContextTypes
 
 from carpoolerbot.actions import send_poll, send_whos_tomorrow
 from carpoolerbot.database.repositories.misc import get_latest_poll
-from carpoolerbot.database.repositories.poll_answers import delete_poll_answers, get_poll_results, insert_poll_answers
+from carpoolerbot.database.repositories.poll_answers import (
+    delete_poll_answers,
+    get_all_poll_answers,
+    insert_poll_answers,
+)
 from carpoolerbot.database.repositories.poll_reports import get_poll_reports, insert_poll_report
 from carpoolerbot.database.types import PollReportType
 from carpoolerbot.message_serializers import full_poll_result, whos_on_text
@@ -47,8 +51,7 @@ async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
         await update.effective_chat.send_message("No Polls found.")
         return
 
-    latest_poll_results = get_poll_results(latest_poll.poll_id)
-    assert latest_poll_results is not None  # Should always be not None if poll exists
+    latest_poll_results = get_all_poll_answers(latest_poll.poll_id)
 
     poll_report = await update.effective_chat.send_message(
         full_poll_result(latest_poll_results),
@@ -59,10 +62,7 @@ async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> 
 
 async def update_poll_reports(bot: Bot, poll_id: str) -> None:
     poll_reports = get_poll_reports(poll_id)
-    latest_poll = get_poll_results(poll_id)
-    if not latest_poll:
-        logger.warning("No latest poll found for poll_id %s", poll_id)
-        return
+    latest_poll = get_all_poll_answers(poll_id)
 
     for report in poll_reports:
         match PollReportType(report.message_type):
@@ -98,8 +98,8 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
         logger.info("User %s retracted his vote", answering_user_id)
     else:
         logger.info("Handling poll update")
-        insert_poll_answers(poll_id, selected_options, update.poll_answer.user)
-        logger.info("Inserted %s answers by user %s, poll_id = %s", len(selected_options), answering_user_id, poll_id)
+        insert_poll_answers(poll_id, update.poll_answer.option_ids, update.poll_answer.user)
+        logger.info("Inserted answers by user %s, poll_id = %s", answering_user_id, poll_id)
 
     await update_poll_reports(update.get_bot(), poll_id)
 
