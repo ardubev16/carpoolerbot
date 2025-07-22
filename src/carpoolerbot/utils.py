@@ -1,11 +1,11 @@
+import importlib.metadata
+
 from telegram import Update, constants
 from telegram.ext import CommandHandler, ContextTypes
 
 
 def version_command_handler() -> CommandHandler:
     async def _version_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-        import importlib.metadata
-
         version = importlib.metadata.version("carpoolerbot")
         release_notes_url = f"https://github.com/ardubev16/carpoolerbot/releases/tag/v{version}"
         message = f"""\
