@@ -11,7 +11,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
-COPY --from=ghcr.io/astral-sh/uv:0.8.0 /uv /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.8.2 /uv /bin/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
