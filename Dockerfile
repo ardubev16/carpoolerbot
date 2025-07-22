@@ -5,16 +5,25 @@ FROM python:3.12.8-slim-bookworm AS builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 COPY --from=ghcr.io/astral-sh/uv:0.8.0 /uv /bin/
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    # Needed by hatch-vcs
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=.python-version,target=.python-version \
+    SETUPTOOLS_SCM_PRETEND_VERSION_FOR_CARPOOLERBOT=0 \
     uv sync --locked --no-dev --no-install-project
 
 # Build app
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=source=.git,target=.git,type=bind \
     uv sync --locked --no-dev --no-editable
 
 
