@@ -44,7 +44,9 @@ def main() -> None:
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(commands.handle_poll_answer))
-    application.add_handler(CallbackQueryHandler(daily_poll_report_callback_handler, DailyReportCommands))
+    application.add_handler(
+        CallbackQueryHandler(daily_poll_report_callback_handler, lambda x: x in DailyReportCommands),
+    )
     application.add_handler(version_command_handler())
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)

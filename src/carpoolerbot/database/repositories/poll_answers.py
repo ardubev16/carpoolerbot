@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import DbUser, Poll, PollAnswer
-from carpoolerbot.poll_reports.types import ReturnTime
+from carpoolerbot.poll_reports.types import NotVotedError, ReturnTime
 
 
 def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
@@ -64,8 +64,7 @@ def set_override_answer(user_id: int, poll_id: str, poll_option_id: int, *, valu
         ).first()
 
     if not poll_answer:
-        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
-        raise ValueError(msg)
+        raise NotVotedError(user_id, poll_id, poll_option_id)
 
     with Session.begin() as s:
         poll_answer.override_answer = value
@@ -83,15 +82,14 @@ def set_return_time(user_id: int, poll_id: str, poll_option_id: int, return_time
         ).first()
 
     if not poll_answer:
-        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
-        raise ValueError(msg)
+        raise NotVotedError(user_id, poll_id, poll_option_id)
 
     with Session.begin() as s:
         poll_answer.return_time = return_time
         s.add(poll_answer)
 
 
-def set_driver_id(user_id: int, poll_id: str, poll_option_id: int, driver_id: int) -> None:
+def set_driver_id(user_id: int, poll_id: str, poll_option_id: int, driver_id: int, *, toggle: bool = False) -> None:
     with Session() as s:
         poll_answer = s.scalars(
             select(PollAnswer).where(
@@ -102,9 +100,12 @@ def set_driver_id(user_id: int, poll_id: str, poll_option_id: int, driver_id: in
         ).first()
 
     if not poll_answer:
-        msg = f"No poll answer found for user {user_id}, poll {poll_id}, option {poll_option_id}"
-        raise ValueError(msg)
+        raise NotVotedError(user_id, poll_id, poll_option_id)
+
+    if toggle and poll_answer.driver_id == driver_id:
+        poll_answer.driver_id = None
+    else:
+        poll_answer.driver_id = driver_id
 
     with Session.begin() as s:
-        poll_answer.driver_id = driver_id
         s.add(poll_answer)

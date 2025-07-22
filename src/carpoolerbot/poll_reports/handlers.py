@@ -14,7 +14,7 @@ from carpoolerbot.database.repositories.poll_answers import (
 )
 from carpoolerbot.database.repositories.poll_reports import get_all_poll_reports, get_poll_report, insert_poll_report
 from carpoolerbot.poll_reports.message_serializers import full_poll_result, whos_on_text
-from carpoolerbot.poll_reports.types import DAILY_MSG_KEYBOARD_DEFAULT, DailyReportCommands, ReturnTime
+from carpoolerbot.poll_reports.types import DAILY_MSG_KEYBOARD_DEFAULT, DailyReportCommands, NotVotedError, ReturnTime
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,11 @@ async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
                 reply_markup=reply_markup,
             )
         except telegram.error.BadRequest as err:
-            logger.info("%s %s", err, {"chat_id": report.chat_id, "message_id": report.message_id})
+            if (
+                err.message != "Message is not modified: specified new message content and reply "
+                "markup are exactly the same as a current content and reply markup of the message"
+            ):
+                raise
 
 
 async def send_daily_poll_report(bot: telegram.Bot, chat_id: int) -> None:
@@ -83,19 +87,24 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
 
     assert poll_option_id  # This should always be set for daily reports
 
-    match DailyReportCommands(update.callback_query.data):
-        case DailyReportCommands.CONFIRM:
-            set_override_answer(user_id, poll_id, poll_option_id, value=True)
-        case DailyReportCommands.REJECT:
-            set_override_answer(user_id, poll_id, poll_option_id, value=False)
-        case DailyReportCommands.DRIVE:
-            set_driver_id(user_id, poll_id, poll_option_id, user_id)
-        case DailyReportCommands.WORK:
-            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_WORK)
-        case DailyReportCommands.DINNER:
-            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_DINNER)
-        case DailyReportCommands.LATE:
-            set_return_time(user_id, poll_id, poll_option_id, ReturnTime.LATE)
+    try:
+        match DailyReportCommands(update.callback_query.data):
+            case DailyReportCommands.CONFIRM:
+                set_override_answer(user_id, poll_id, poll_option_id, value=True)
+            case DailyReportCommands.REJECT:
+                set_override_answer(user_id, poll_id, poll_option_id, value=False)
+            case DailyReportCommands.DRIVE:
+                set_driver_id(user_id, poll_id, poll_option_id, user_id, toggle=True)
+            case DailyReportCommands.WORK:
+                set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_WORK)
+            case DailyReportCommands.DINNER:
+                set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_DINNER)
+            case DailyReportCommands.LATE:
+                set_return_time(user_id, poll_id, poll_option_id, ReturnTime.LATE)
+    except NotVotedError as e:
+        logger.info("User %s tried to interact with daily report without voting: %s", user_id, e)
+        await update.callback_query.answer(f"You have not voted in the latest poll (id={e.poll_id}).", show_alert=True)
+        return
 
     await update.callback_query.answer()
 

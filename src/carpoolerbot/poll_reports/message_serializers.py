@@ -10,10 +10,10 @@ from carpoolerbot.poll_reports.types import ReturnTime
 
 
 def format_user_answer(answer: PollAnswer) -> str:
-    formatted_user = answer.user.user_fullname
+    formatted_user = f'<a href="tg://user?id={answer.user_id}">{answer.user.user_fullname}</a>'
 
     if answer.override_answer is False:
-        formatted_user = f"<s>{formatted_user}</s>"
+        return f"<s>{formatted_user}</s>"
 
     if answer.driver_id == answer.user_id:
         formatted_user = f"🚗 {formatted_user}"
