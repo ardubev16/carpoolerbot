@@ -31,9 +31,9 @@ class DbUser(Base):
 class Poll(Base):
     __tablename__ = "polls"
 
-    chat_id: Mapped[int] = mapped_column(primary_key=True)
-    message_id: Mapped[int]
     poll_id: Mapped[str] = mapped_column(primary_key=True)
+    chat_id: Mapped[int]
+    message_id: Mapped[int]
     options: Mapped[list[str]] = mapped_column(JSON)
     is_open: Mapped[bool] = mapped_column(default=True)
 

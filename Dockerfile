@@ -8,6 +8,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     # Needed by hatch-vcs
     git \
+    # Needed by psycopg2
+    build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -35,6 +37,8 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     dumb-init=1.2.5-2 \
+    # Needed by psycopg2
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv

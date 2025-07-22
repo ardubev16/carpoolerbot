@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("message_id", sa.Integer(), nullable=False),
         sa.Column("poll_id", sa.String(), nullable=False),
         sa.Column("options", sa.JSON(), nullable=False),
-        sa.PrimaryKeyConstraint("chat_id", "poll_id"),
+        sa.PrimaryKeyConstraint("poll_id"),
     )
     op.create_table(
         "users",
