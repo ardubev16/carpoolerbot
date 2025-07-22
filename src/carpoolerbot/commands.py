@@ -5,7 +5,7 @@ from telegram import Update, constants
 from telegram.ext import ContextTypes
 
 from carpoolerbot.actions import send_poll
-from carpoolerbot.database.repositories.misc import get_latest_poll
+from carpoolerbot.database.repositories.poll import get_latest_poll
 from carpoolerbot.database.repositories.poll_answers import (
     delete_poll_answers,
     get_all_poll_answers,

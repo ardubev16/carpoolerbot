@@ -5,7 +5,7 @@ import telegram
 from telegram import InlineKeyboardMarkup, Update, constants
 from telegram.ext import ContextTypes
 
-from carpoolerbot.database.repositories.misc import get_latest_poll
+from carpoolerbot.database.repositories.poll import get_latest_poll
 from carpoolerbot.database.repositories.poll_answers import (
     get_all_poll_answers,
     set_driver_id,
@@ -86,6 +86,11 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
     poll_option_id = poll_report.poll_option_id
 
     assert poll_option_id  # This should always be set for daily reports
+
+    if not poll_report.poll.is_open:
+        logger.info("User %s tried to interact with daily report belonging to closed poll: %s", user_id, poll_id)
+        await update.callback_query.answer("This poll is closed.", show_alert=True)
+        return
 
     try:
         match DailyReportCommands(update.callback_query.data):

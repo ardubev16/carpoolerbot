@@ -2,12 +2,13 @@ from telegram import Bot
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import Poll
-from carpoolerbot.database.repositories.misc import get_latest_poll
+from carpoolerbot.database.repositories.poll import close_poll, get_latest_poll
 
 
 async def send_poll(bot: Bot, chat_id: int) -> None:
     if latest_poll := get_latest_poll(chat_id):
         await bot.stop_poll(chat_id, latest_poll.message_id)
+        close_poll(chat_id, latest_poll.message_id)
         await bot.unpin_chat_message(chat_id, latest_poll.message_id)
 
     options = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]

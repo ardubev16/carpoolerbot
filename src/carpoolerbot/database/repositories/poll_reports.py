@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from telegram import Message
 
 from carpoolerbot.database.models import PollReport
@@ -28,7 +29,9 @@ def get_all_poll_reports(poll_id: str) -> Sequence[PollReport]:
 def get_poll_report(chat_id: int, message_id: int) -> PollReport:
     with Session() as s:
         report = s.scalar(
-            select(PollReport).where(
+            select(PollReport)
+            .options(selectinload(PollReport.poll))
+            .where(
                 PollReport.chat_id == chat_id,
                 PollReport.message_id == message_id,
             ),

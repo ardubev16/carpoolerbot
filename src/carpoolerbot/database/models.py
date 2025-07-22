@@ -35,6 +35,7 @@ class Poll(Base):
     message_id: Mapped[int]
     poll_id: Mapped[str] = mapped_column(primary_key=True)
     options: Mapped[list[str]] = mapped_column(JSON)
+    is_open: Mapped[bool] = mapped_column(default=True)
 
     poll_reports: Mapped[list[PollReport]] = relationship(back_populates="poll")
     poll_answers: Mapped[list[PollAnswer]] = relationship(back_populates="poll")
