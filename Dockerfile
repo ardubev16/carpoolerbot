@@ -18,14 +18,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=.python-version,target=.python-version \
     SETUPTOOLS_SCM_PRETEND_VERSION_FOR_CARPOOLERBOT=0 \
-    uv sync --locked --no-dev --no-install-project
+    uv sync --locked --no-dev --no-install-project --no-editable
 
 # Build app
-COPY pyproject.toml uv.lock README.md ./
-COPY src ./src
+COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=source=.git,target=.git,type=bind \
-    uv sync --locked --no-dev --no-editable
+    --mount=type=bind,source=.git,target=.git \
+    # NOTE: reinstall-package is needed to calculate the correct version
+    uv sync --locked --no-dev --no-editable --reinstall-package=carpoolerbot
 
 
 # Copy app to runtime stage
@@ -37,9 +37,11 @@ RUN apt-get update \
     dumb-init=1.2.5-2 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app /app
-COPY alembic.ini entrypoint.sh ./
-COPY alembic ./alembic
+COPY --from=builder /app/.venv /app/.venv
+
+# Needed by Alembic
+COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/entrypoint.sh /app/
+COPY --from=builder /app/alembic /app/alembic
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
