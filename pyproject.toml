@@ -20,6 +20,7 @@ dependencies = [
 [dependency-groups]
 dev = ["mypy==1.17.0", "ruff==0.12.4"]
 
+
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
 
@@ -29,6 +30,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+
 
 [tool.pyright]
 pythonVersion = "3.12"
