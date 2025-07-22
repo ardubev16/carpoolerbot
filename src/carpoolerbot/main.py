@@ -1,3 +1,4 @@
+import importlib.metadata
 import logging
 
 from telegram import Update
@@ -29,6 +30,9 @@ async def _set_commands(app: Application) -> None:
 def main() -> None:
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    version = importlib.metadata.version("carpoolerbot")
+    logger.info("Starting CarpoolerBot version %s", version)
 
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(_set_commands).build()
 
