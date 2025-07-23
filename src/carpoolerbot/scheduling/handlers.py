@@ -3,43 +3,17 @@ import logging
 
 from apscheduler.triggers.cron import CronTrigger
 from telegram import Update
-from telegram.ext import CallbackContext, ContextTypes
+from telegram.ext import CommandHandler, ContextTypes
 
-from carpoolerbot.poll.common import send_poll
-from carpoolerbot.poll_report.common import send_daily_poll_report
+from carpoolerbot.scheduling.common import (
+    jobs_exist,
+    remove_job_if_exists,
+    send_poll_callback,
+    send_whos_tomorrow_callback,
+)
+from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
-
-
-def jobs_exist(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    assert context.job_queue
-    return bool(context.job_queue.get_jobs_by_name(name))
-
-
-def remove_job_if_exists(name: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Remove job with given name. Returns whether job was removed."""
-    assert context.job_queue
-
-    current_jobs = context.job_queue.get_jobs_by_name(name)
-    if not current_jobs:
-        return False
-    for job in current_jobs:
-        job.schedule_removal()
-    return True
-
-
-async def send_whos_tomorrow_callback(context: CallbackContext) -> None:
-    assert context.job
-    assert context.job.chat_id
-
-    await send_daily_poll_report(context.bot, context.job.chat_id)
-
-
-async def send_poll_callback(context: CallbackContext) -> None:
-    assert context.job
-    assert context.job.chat_id
-
-    await send_poll(context.bot, context.job.chat_id)
 
 
 async def enable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -100,3 +74,16 @@ async def disable_schedule_cmd(update: Update, context: ContextTypes.DEFAULT_TYP
     message_text = "Schedule has been disabled." if job_removed else "Schedule was not enabled."
     logger.info("User %s disabled schedule in chat %s", update.effective_user.id, chat_id)
     await update.effective_chat.send_message(message_text, disable_notification=True)
+
+
+def handlers() -> list[TypedBaseHandler]:
+    return [
+        CommandHandler("enable_schedule", enable_schedule_cmd),
+        CommandHandler("disable_schedule", disable_schedule_cmd),
+    ]
+
+
+commands = (
+    ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at set time."),
+    ("disable_schedule", "Disable automatic messages."),
+)
