@@ -7,7 +7,7 @@ from telegram.ext import CommandHandler, ContextTypes, PollAnswerHandler
 from carpoolerbot.database.repositories.poll_answers import upsert_poll_answers
 from carpoolerbot.poll.common import send_poll
 from carpoolerbot.poll_report.common import update_poll_reports
-from carpoolerbot.schedules import jobs_exist
+from carpoolerbot.scheduling.common import jobs_exist
 from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
