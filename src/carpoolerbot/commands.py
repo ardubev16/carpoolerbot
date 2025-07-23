@@ -1,18 +1,12 @@
 import logging
 
 import telegram
-from telegram import Update, constants
+from telegram import Update
 from telegram.ext import ContextTypes
 
 from carpoolerbot.actions import send_poll
-from carpoolerbot.database.repositories.poll import get_latest_poll
-from carpoolerbot.database.repositories.poll_answers import (
-    get_all_poll_answers,
-    upsert_poll_answers,
-)
-from carpoolerbot.database.repositories.poll_reports import insert_poll_report
-from carpoolerbot.poll_reports.handlers import send_daily_poll_report, update_poll_reports
-from carpoolerbot.poll_reports.message_serializers import full_poll_result
+from carpoolerbot.database.repositories.poll_answers import upsert_poll_answers
+from carpoolerbot.poll_report.handlers import update_poll_reports
 from carpoolerbot.schedules import jobs_exist
 
 logger = logging.getLogger(__name__)
@@ -41,23 +35,6 @@ async def poll_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await send_poll(update.get_bot(), update.effective_chat.id)
 
 
-async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_chat
-
-    latest_poll = get_latest_poll(update.effective_chat.id)
-    if not latest_poll:
-        await update.effective_chat.send_message("No Polls found.")
-        return
-
-    latest_poll_results = get_all_poll_answers(latest_poll.poll_id)
-
-    poll_report = await update.effective_chat.send_message(
-        full_poll_result(latest_poll_results),
-        parse_mode=constants.ParseMode.HTML,
-    )
-    insert_poll_report(latest_poll.poll_id, poll_report, poll_option_id=None)
-
-
 async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     assert update.poll_answer
     assert update.poll_answer.user
@@ -70,9 +47,3 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
     logger.info("Updated answers of user %s, poll_id = %s", answering_user.id, poll_id)
 
     await update_poll_reports(update.get_bot(), poll_id)
-
-
-async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-    assert update.effective_chat
-
-    await send_daily_poll_report(update.get_bot(), update.effective_chat.id)

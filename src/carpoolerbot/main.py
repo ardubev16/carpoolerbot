@@ -6,8 +6,9 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Poll
 
 from carpoolerbot import commands, schedules
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
-from carpoolerbot.poll_reports.handlers import daily_poll_report_callback_handler
-from carpoolerbot.poll_reports.types import DailyReportCommands
+from carpoolerbot.poll_report import commands as poll_report_commands
+from carpoolerbot.poll_report.handlers import daily_poll_report_callback_handler
+from carpoolerbot.poll_report.types import DailyReportCommands
 from carpoolerbot.settings import settings
 from carpoolerbot.utils import version_command_handler
 
@@ -40,8 +41,8 @@ def main() -> None:
     application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, url=settings.db_url))
 
     application.add_handler(CommandHandler("poll", commands.poll_cmd))
-    application.add_handler(CommandHandler("get_poll_results", commands.get_poll_results_cmd))
-    application.add_handler(CommandHandler("whos_tomorrow", commands.whos_tomorrow_cmd))
+    application.add_handler(CommandHandler("get_poll_results", poll_report_commands.get_poll_results_cmd))
+    application.add_handler(CommandHandler("whos_tomorrow", poll_report_commands.whos_tomorrow_cmd))
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
     application.add_handler(PollAnswerHandler(commands.handle_poll_answer))

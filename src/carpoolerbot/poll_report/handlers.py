@@ -13,8 +13,8 @@ from carpoolerbot.database.repositories.poll_answers import (
     set_return_time,
 )
 from carpoolerbot.database.repositories.poll_reports import get_all_poll_reports, get_poll_report, insert_poll_report
-from carpoolerbot.poll_reports.message_serializers import full_poll_result, whos_on_text
-from carpoolerbot.poll_reports.types import DAILY_MSG_KEYBOARD_DEFAULT, DailyReportCommands, NotVotedError, ReturnTime
+from carpoolerbot.poll_report.message_serializers import full_poll_result, whos_on_text
+from carpoolerbot.poll_report.types import DAILY_MSG_KEYBOARD_DEFAULT, DailyReportCommands, NotVotedError, ReturnTime
 
 logger = logging.getLogger(__name__)
 
