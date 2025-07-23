@@ -5,7 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 from telegram import Update
 from telegram.ext import CallbackContext, ContextTypes
 
-from carpoolerbot.actions import send_poll
+from carpoolerbot.poll.common import send_poll
 from carpoolerbot.poll_report.handlers import send_daily_poll_report
 
 logger = logging.getLogger(__name__)

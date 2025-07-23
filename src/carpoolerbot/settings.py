@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DB_HOST: str = Field(default=...)
     DB_NAME: str = Field(default=...)
     DB_USERNAME: str = Field(default=...)
-    DB_PASSWORD: str = Field(default="sqlite://")
+    DB_PASSWORD: str = Field(default=...)
 
     @computed_field
     @property

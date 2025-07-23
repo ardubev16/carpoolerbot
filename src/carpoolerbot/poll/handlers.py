@@ -2,12 +2,13 @@ import logging
 
 import telegram
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import CommandHandler, ContextTypes, PollAnswerHandler
 
-from carpoolerbot.actions import send_poll
 from carpoolerbot.database.repositories.poll_answers import upsert_poll_answers
+from carpoolerbot.poll.common import send_poll
 from carpoolerbot.poll_report.handlers import update_poll_reports
 from carpoolerbot.schedules import jobs_exist
+from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
 
@@ -47,3 +48,13 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
     logger.info("Updated answers of user %s, poll_id = %s", answering_user.id, poll_id)
 
     await update_poll_reports(update.get_bot(), poll_id)
+
+
+def handlers() -> list[TypedBaseHandler]:
+    return [
+        CommandHandler("poll", poll_cmd),
+        PollAnswerHandler(handle_poll_answer),
+    ]
+
+
+commands = (("poll", "Manually send the weekly Poll."),)

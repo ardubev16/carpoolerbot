@@ -1,10 +1,13 @@
 import importlib.metadata
+from typing import Any
 
 from telegram import Update, constants
-from telegram.ext import CommandHandler, ContextTypes
+from telegram.ext import BaseHandler, CommandHandler, ContextTypes
+
+type TypedBaseHandler = BaseHandler[Any, ContextTypes.DEFAULT_TYPE, Any]
 
 
-def version_command_handler() -> CommandHandler:
+def version_command_handler() -> TypedBaseHandler:
     async def _version_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         version = importlib.metadata.version("carpoolerbot")
         release_notes_url = f"https://github.com/ardubev16/carpoolerbot/releases/tag/v{version}"
