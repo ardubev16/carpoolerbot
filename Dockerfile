@@ -44,11 +44,11 @@ RUN apt-get update \
 COPY --from=builder /app/.venv /app/.venv
 
 # Needed by Alembic
-COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/entrypoint.sh /app/
+COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/
 COPY --from=builder /app/alembic /app/alembic
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/app/entrypoint.sh"]
+CMD ["/bin/sh", "-c", "alembic upgrade head && carpoolerbot"]
