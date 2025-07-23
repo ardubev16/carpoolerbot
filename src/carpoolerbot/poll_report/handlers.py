@@ -13,7 +13,7 @@ from carpoolerbot.database.repositories.poll_answers import (
 from carpoolerbot.database.repositories.poll_reports import get_poll_report, insert_poll_report
 from carpoolerbot.poll_report.common import send_daily_poll_report, update_poll_reports
 from carpoolerbot.poll_report.message_serializers import full_poll_result
-from carpoolerbot.poll_report.types import DailyReportCommands, NotVotedError, ReturnTime
+from carpoolerbot.poll_report.types import DailyReportCommands, NotVotedError, PollNotFoundError, ReturnTime
 from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,13 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
 
     user_id = update.effective_user.id
 
-    poll_report = get_poll_report(update.effective_chat.id, update.effective_message.id)
+    try:
+        poll_report = get_poll_report(update.effective_chat.id, update.effective_message.id)
+    except PollNotFoundError as e:
+        logger.error("Poll not found, could be older than the bot's first start: %s", e)
+        await update.callback_query.answer("Poll not found.")
+        return
+
     poll_id = poll_report.poll_id
     poll_option_id = poll_report.poll_option_id
 

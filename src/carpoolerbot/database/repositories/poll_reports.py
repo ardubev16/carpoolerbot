@@ -6,6 +6,7 @@ from telegram import Message
 
 from carpoolerbot.database.models import PollReport
 from carpoolerbot.database.session import Session
+from carpoolerbot.poll_report.types import PollNotFoundError
 
 
 def insert_poll_report(poll_id: str, message: Message, *, poll_option_id: int | None) -> None:
@@ -38,7 +39,6 @@ def get_poll_report(chat_id: int, message_id: int) -> PollReport:
         )
 
     if report is None:
-        msg = f"Poll report not found for chat_id {chat_id} and message_id {message_id}."
-        raise ValueError(msg)
+        raise PollNotFoundError(chat_id, message_id)
 
     return report

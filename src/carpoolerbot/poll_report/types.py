@@ -42,3 +42,12 @@ class NotVotedError(Exception):
         self.user_id = user_id
         self.poll_id = poll_id
         self.poll_option_id = poll_option_id
+
+
+class PollNotFoundError(Exception):
+    """Exception raised when a poll is not found in the database."""
+
+    def __init__(self, chat_id: int, message_id: int) -> None:
+        super().__init__(f"Poll not found for chat_id {chat_id} and message_id {message_id}.")
+        self.chat_id = chat_id
+        self.message_id = message_id
