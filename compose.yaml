@@ -26,7 +26,7 @@ services:
       POSTGRES_USER: *db-usr
       POSTGRES_PASSWORD: *db-pwd
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: [CMD, pg_isready, -U, *db-usr]
       interval: 30s
       timeout: 60s
       retries: 5
