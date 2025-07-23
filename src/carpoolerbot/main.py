@@ -36,11 +36,8 @@ def main() -> None:
 
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(_set_commands).build()
 
-    if settings.DB_URL != "sqlite://":
-        assert application.job_queue
-        application.job_queue.scheduler.add_jobstore(
-            PTBSQLAlchemyJobStore(application=application, url=settings.DB_URL),
-        )
+    assert application.job_queue
+    application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, url=settings.db_url))
 
     application.add_handler(CommandHandler("poll", commands.poll_cmd))
     application.add_handler(CommandHandler("get_poll_results", commands.get_poll_results_cmd))

@@ -8,6 +8,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     # Needed by hatch-vcs
     git \
+    # Needed by psycopg2
+    build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -35,16 +37,18 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     dumb-init=1.2.5-2 \
+    # Needed by psycopg2
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
 
 # Needed by Alembic
-COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/entrypoint.sh /app/
+COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/
 COPY --from=builder /app/alembic /app/alembic
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/app/entrypoint.sh"]
+CMD ["/bin/sh", "-c", "alembic upgrade head && carpoolerbot"]
