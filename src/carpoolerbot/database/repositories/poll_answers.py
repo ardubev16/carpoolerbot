@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 import telegram
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
@@ -24,12 +24,7 @@ def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
     return poll_answers
 
 
-def delete_poll_answers(poll_id: str, user_id: int) -> None:
-    with Session.begin() as s:
-        s.execute(delete(PollAnswer).where(PollAnswer.poll_id == poll_id, PollAnswer.user_id == user_id))
-
-
-def insert_poll_answers(poll_id: str, selected_options: Sequence[int], user: telegram.User) -> None:
+def upsert_poll_answers(poll_id: str, selected_options: Sequence[int], user: telegram.User) -> None:
     with Session() as s:
         poll_options = s.scalars(select(Poll.options).where(Poll.poll_id == poll_id)).first()
 
@@ -43,14 +38,14 @@ def insert_poll_answers(poll_id: str, selected_options: Sequence[int], user: tel
             poll_id=poll_id,
             poll_option_id=option_id,
             poll_answer=option_id in selected_options,
-            return_time=0,
         )
         for option_id in range(len(poll_options))
     ]
 
     with Session.begin() as s:
         s.merge(DbUser.from_telegram_user(user))
-        s.add_all(answers)
+        for answer in answers:
+            s.merge(answer)
 
 
 def set_override_answer(user_id: int, poll_id: str, poll_option_id: int, *, value: bool) -> None:

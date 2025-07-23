@@ -63,7 +63,7 @@ class PollAnswer(Base):
 
     override_answer: Mapped[bool | None] = mapped_column(default=None)
     driver_id: Mapped[int | None] = mapped_column(default=None)
-    return_time: Mapped[int]
+    return_time: Mapped[int] = mapped_column(default=0)
 
     user: Mapped[DbUser] = relationship()
     poll: Mapped[Poll] = relationship(back_populates="poll_answers")
