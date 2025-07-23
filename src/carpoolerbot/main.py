@@ -2,13 +2,10 @@ import importlib.metadata
 import logging
 
 from telegram import Update
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler
+from telegram.ext import Application, CommandHandler
 
-from carpoolerbot import poll, schedules
+from carpoolerbot import poll, poll_report, schedules
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
-from carpoolerbot.poll_report import commands as poll_report_commands
-from carpoolerbot.poll_report.handlers import daily_poll_report_callback_handler
-from carpoolerbot.poll_report.types import DailyReportCommands
 from carpoolerbot.settings import settings
 from carpoolerbot.utils import version_command_handler
 
@@ -19,8 +16,7 @@ async def _set_commands(app: Application) -> None:
     await app.bot.set_my_commands(
         (
             *poll.commands,
-            ("get_poll_results", "Get results to last Poll."),
-            ("whos_tomorrow", "Return the people on site tomorrow."),
+            *poll_report.commands,
             ("enable_schedule", "Send weekly poll on Sunday and tomorrow's people at set time."),
             ("disable_schedule", "Disable automatic messages."),
             ("version", "Display bot version"),
@@ -41,13 +37,9 @@ def main() -> None:
     application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, url=settings.db_url))
 
     application.add_handlers(poll.handlers())
-    application.add_handler(CommandHandler("get_poll_results", poll_report_commands.get_poll_results_cmd))
-    application.add_handler(CommandHandler("whos_tomorrow", poll_report_commands.whos_tomorrow_cmd))
+    application.add_handlers(poll_report.handlers())
     application.add_handler(CommandHandler("enable_schedule", schedules.enable_schedule_cmd))
     application.add_handler(CommandHandler("disable_schedule", schedules.disable_schedule_cmd))
-    application.add_handler(
-        CallbackQueryHandler(daily_poll_report_callback_handler, lambda x: x in DailyReportCommands),
-    )
     application.add_handler(version_command_handler())
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)

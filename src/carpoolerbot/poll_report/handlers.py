@@ -1,9 +1,7 @@
-import datetime
 import logging
 
-import telegram
-from telegram import InlineKeyboardMarkup, Update, constants
-from telegram.ext import ContextTypes
+from telegram import Update, constants
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
 from carpoolerbot.database.repositories.poll import get_latest_poll
 from carpoolerbot.database.repositories.poll_answers import (
@@ -12,65 +10,36 @@ from carpoolerbot.database.repositories.poll_answers import (
     set_override_answer,
     set_return_time,
 )
-from carpoolerbot.database.repositories.poll_reports import get_all_poll_reports, get_poll_report, insert_poll_report
-from carpoolerbot.poll_report.message_serializers import full_poll_result, whos_on_text
-from carpoolerbot.poll_report.types import DAILY_MSG_KEYBOARD_DEFAULT, DailyReportCommands, NotVotedError, ReturnTime
+from carpoolerbot.database.repositories.poll_reports import get_poll_report, insert_poll_report
+from carpoolerbot.poll_report.common import send_daily_poll_report, update_poll_reports
+from carpoolerbot.poll_report.message_serializers import full_poll_result
+from carpoolerbot.poll_report.types import DailyReportCommands, NotVotedError, ReturnTime
+from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
 
 
-async def update_poll_reports(bot: telegram.Bot, poll_id: str) -> None:
-    poll_reports = get_all_poll_reports(poll_id)
-    latest_poll = get_all_poll_answers(poll_id)
+async def get_poll_results_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat
 
-    for report in poll_reports:
-        match report.poll_option_id:
-            case None:
-                text = full_poll_result(latest_poll)
-                reply_markup = None
-
-            case _:
-                day_after_sent_report = datetime.datetime.fromtimestamp(report.sent_timestamp) + datetime.timedelta(
-                    days=1,
-                )
-                text = whos_on_text(latest_poll, day_after_sent_report)
-                reply_markup = InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT)
-
-        try:
-            await bot.edit_message_text(
-                chat_id=report.chat_id,
-                message_id=report.message_id,
-                text=text,
-                parse_mode=constants.ParseMode.HTML,
-                reply_markup=reply_markup,
-            )
-        except telegram.error.BadRequest as err:
-            if (
-                err.message != "Message is not modified: specified new message content and reply "
-                "markup are exactly the same as a current content and reply markup of the message"
-            ):
-                raise
-
-
-async def send_daily_poll_report(bot: telegram.Bot, chat_id: int) -> None:
-    latest_poll = get_latest_poll(chat_id)
-
+    latest_poll = get_latest_poll(update.effective_chat.id)
     if not latest_poll:
-        await bot.send_message(chat_id, "No Polls found.")
+        await update.effective_chat.send_message("No Polls found.")
         return
 
     latest_poll_results = get_all_poll_answers(latest_poll.poll_id)
 
-    tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
-
-    poll_report = await bot.send_message(
-        chat_id,
-        whos_on_text(latest_poll_results, tomorrow),
+    poll_report = await update.effective_chat.send_message(
+        full_poll_result(latest_poll_results),
         parse_mode=constants.ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup(DAILY_MSG_KEYBOARD_DEFAULT),
     )
+    insert_poll_report(latest_poll.poll_id, poll_report, poll_option_id=None)
 
-    insert_poll_report(latest_poll.poll_id, poll_report, poll_option_id=tomorrow.weekday())
+
+async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+    assert update.effective_chat
+
+    await send_daily_poll_report(update.get_bot(), update.effective_chat.id)
 
 
 async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -114,3 +83,17 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
     await update.callback_query.answer()
 
     await update_poll_reports(update.get_bot(), poll_id)
+
+
+def handlers() -> list[TypedBaseHandler]:
+    return [
+        CommandHandler("get_poll_results", get_poll_results_cmd),
+        CommandHandler("whos_tomorrow", whos_tomorrow_cmd),
+        CallbackQueryHandler(daily_poll_report_callback_handler, lambda x: x in DailyReportCommands),
+    ]
+
+
+commands = (
+    ("get_poll_results", "Get results to last Poll."),
+    ("whos_tomorrow", "Return the people on site tomorrow."),
+)
