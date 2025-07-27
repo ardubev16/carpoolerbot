@@ -60,7 +60,7 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
     poll_id = poll_report.poll_id
     poll_option_id = poll_report.poll_option_id
 
-    assert poll_option_id  # This should always be set for daily reports
+    assert poll_option_id is not None  # This should always be set for daily reports
 
     if not poll_report.poll.is_open:
         logger.info("User %s tried to interact with daily report belonging to closed poll: %s", user_id, poll_id)
