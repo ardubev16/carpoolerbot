@@ -9,7 +9,7 @@ from carpoolerbot.poll import handlers as poll_handlers
 from carpoolerbot.poll_report import handlers as poll_report_handlers
 from carpoolerbot.scheduling import handlers as scheduling_handlers
 from carpoolerbot.settings import settings
-from carpoolerbot.utils import version_command_handler
+from carpoolerbot.utils import help_command_handler, version_command_handler
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ async def _set_commands(app: Application) -> None:
             *poll_report_handlers.commands,
             *scheduling_handlers.commands,
             ("version", "Display bot version"),
+            ("help", "Display help message"),
         ),
     )
 
@@ -41,5 +42,6 @@ def main() -> None:
     application.add_handlers(poll_report_handlers.handlers())
     application.add_handlers(scheduling_handlers.handlers())
     application.add_handler(version_command_handler())
+    application.add_handler(help_command_handler())
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
