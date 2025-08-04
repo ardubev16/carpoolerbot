@@ -32,7 +32,7 @@ repos:
       - id: sqlfluff-fix
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.5
+    rev: v0.12.7
     hooks:
       # Run the linter.
       - id: ruff
@@ -43,7 +43,7 @@ repos:
         types_or: [python, pyi]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.3
+    rev: 0.8.4
     hooks:
       - id: uv-lock
 
