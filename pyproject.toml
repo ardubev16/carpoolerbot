@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["mypy==1.17.1", "pyright==1.1.403", "ruff==0.12.7"]
+dev = ["mypy==1.17.1", "pyright==1.1.403", "ruff==0.12.8"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
