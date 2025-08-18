@@ -13,7 +13,13 @@ from carpoolerbot.database.repositories.poll_answers import (
 from carpoolerbot.database.repositories.poll_reports import get_poll_report, insert_poll_report
 from carpoolerbot.poll_report.common import send_daily_poll_report, update_poll_reports
 from carpoolerbot.poll_report.message_serializers import full_poll_result
-from carpoolerbot.poll_report.types import DailyReportCommands, NotVotedError, PollNotFoundError, ReturnTime
+from carpoolerbot.poll_report.types import (
+    DAILY_MSG_HELP,
+    DailyReportCommands,
+    NotVotedError,
+    PollNotFoundError,
+    ReturnTime,
+)
 from carpoolerbot.utils import TypedBaseHandler
 
 logger = logging.getLogger(__name__)
@@ -42,7 +48,7 @@ async def whos_tomorrow_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> Non
     await send_daily_poll_report(update.get_bot(), update.effective_chat.id)
 
 
-async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:  # noqa: C901
     assert update.callback_query
     assert update.effective_chat
     assert update.effective_message
@@ -75,12 +81,18 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
                 set_override_answer(user_id, poll_id, poll_option_id, value=False)
             case DailyReportCommands.DRIVE:
                 set_driver_id(user_id, poll_id, poll_option_id, user_id, toggle=True)
+            case DailyReportCommands.ALONE:
+                set_driver_id(user_id, poll_id, poll_option_id, -1, toggle=True)
             case DailyReportCommands.WORK:
                 set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_WORK)
             case DailyReportCommands.DINNER:
                 set_return_time(user_id, poll_id, poll_option_id, ReturnTime.AFTER_DINNER)
             case DailyReportCommands.LATE:
                 set_return_time(user_id, poll_id, poll_option_id, ReturnTime.LATE)
+            case DailyReportCommands.HELP:
+                await update.callback_query.answer(DAILY_MSG_HELP, show_alert=True)
+                return
+
     except NotVotedError as e:
         logger.info("User %s tried to interact with daily report without voting: %s", user_id, e)
         await update.callback_query.answer(f"You have not voted in the latest poll (id={e.poll_id}).", show_alert=True)

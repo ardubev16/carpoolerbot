@@ -62,6 +62,11 @@ class PollAnswer(Base):
     poll_answer: Mapped[bool]
 
     override_answer: Mapped[bool | None] = mapped_column(default=None)
+    # This can get 4 kinds of values:
+    #   - The user_id: this user is driving
+    #   - Another user_id: this user is in another's car
+    #   - -1: this user goes alone
+    #   - None: default
     driver_id: Mapped[int | None] = mapped_column(BigInteger, default=None)
     return_time: Mapped[int] = mapped_column(default=0)
 

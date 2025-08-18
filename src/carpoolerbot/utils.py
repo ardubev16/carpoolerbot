@@ -23,27 +23,3 @@ To see what's changed checkout the <a href='{release_notes_url}'>Release Notes</
         )
 
     return CommandHandler("version", _version_cmd)
-
-
-def help_command_handler() -> TypedBaseHandler:
-    async def _help_cmd(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
-        assert update.effective_chat
-
-        message = """\
-<b>Carpooler Bot</b> is a Telegram bot for managing carpooling arrangements.
-
-<b>Daily message commands:</b>
-- ✅ Confirm your carpooling plans
-- 🚗 Indicate that you will drive
-- ❌ Reject the carpooling arrangement
-- 💼 Indicate you will return right after work
-- 🍽 Indicate you will return after dinner
-- 🎯 Indicate you will return late"""
-
-        await update.effective_chat.send_message(
-            message,
-            parse_mode=constants.ParseMode.HTML,
-            disable_notification=True,
-        )
-
-    return CommandHandler("help", _help_cmd)

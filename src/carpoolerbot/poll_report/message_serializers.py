@@ -17,6 +17,8 @@ def format_user_answer(answer: PollAnswer) -> str:
 
     if answer.driver_id == answer.user_id:
         formatted_user = f"🚗 {formatted_user}"
+    elif answer.driver_id == -1:
+        formatted_user = f"👤 {formatted_user}"
 
     match ReturnTime(answer.return_time):
         case ReturnTime.AFTER_WORK:

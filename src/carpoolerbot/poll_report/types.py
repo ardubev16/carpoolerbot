@@ -7,9 +7,11 @@ class DailyReportCommands(StrEnum):
     CONFIRM = "daily_msg:confirm"
     REJECT = "daily_msg:reject"
     DRIVE = "daily_msg:drive"
+    ALONE = "daily_msg:alone"
     WORK = "daily_msg:return:work"
     DINNER = "daily_msg:return:dinner"
     LATE = "daily_msg:return:late"
+    HELP = "daily_msg:help"
 
 
 class ReturnTime(IntEnum):
@@ -23,6 +25,7 @@ class ReturnTime(IntEnum):
 DAILY_MSG_KEYBOARD_DEFAULT = [
     [
         InlineKeyboardButton("✅", callback_data=DailyReportCommands.CONFIRM),
+        InlineKeyboardButton("👤", callback_data=DailyReportCommands.ALONE),
         InlineKeyboardButton("🚗", callback_data=DailyReportCommands.DRIVE),
         InlineKeyboardButton("❌", callback_data=DailyReportCommands.REJECT),
     ],
@@ -31,7 +34,18 @@ DAILY_MSG_KEYBOARD_DEFAULT = [
         InlineKeyboardButton("🍽", callback_data=DailyReportCommands.DINNER),
         InlineKeyboardButton("🎯", callback_data=DailyReportCommands.LATE),
     ],
+    [
+        InlineKeyboardButton("❓HELP", callback_data=DailyReportCommands.HELP),
+    ],
 ]
+DAILY_MSG_HELP = """\
+✅ Yes
+🚗 Driver
+👤 Alone
+❌ No
+💼 Return after work
+🍽 Return after dinner
+🎯 Return late"""
 
 
 class NotVotedError(Exception):
