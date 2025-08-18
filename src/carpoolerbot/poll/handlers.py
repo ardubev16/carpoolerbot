@@ -6,7 +6,7 @@ from telegram.ext import CommandHandler, ContextTypes, PollAnswerHandler
 
 from carpoolerbot.database.repositories.poll_answers import upsert_poll_answers
 from carpoolerbot.poll.common import send_poll
-from carpoolerbot.poll_report.common import update_poll_reports
+from carpoolerbot.poll_report.common import update_all_poll_reports
 from carpoolerbot.scheduling.common import jobs_exist
 from carpoolerbot.utils import TypedBaseHandler
 
@@ -47,7 +47,7 @@ async def handle_poll_answer(update: Update, _: ContextTypes.DEFAULT_TYPE) -> No
     upsert_poll_answers(poll_id, update.poll_answer.option_ids, answering_user)
     logger.info("Updated answers of user %s, poll_id = %s", answering_user.id, poll_id)
 
-    await update_poll_reports(update.get_bot(), poll_id)
+    await update_all_poll_reports(update.get_bot(), poll_id)
 
 
 def handlers() -> list[TypedBaseHandler]:

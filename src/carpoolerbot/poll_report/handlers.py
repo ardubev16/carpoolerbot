@@ -11,7 +11,7 @@ from carpoolerbot.database.repositories.poll_answers import (
     set_return_time,
 )
 from carpoolerbot.database.repositories.poll_reports import get_poll_report, insert_poll_report
-from carpoolerbot.poll_report.common import send_daily_poll_report, update_poll_reports
+from carpoolerbot.poll_report.common import send_daily_poll_report, update_poll_report
 from carpoolerbot.poll_report.message_serializers import full_poll_result
 from carpoolerbot.poll_report.types import (
     DAILY_MSG_HELP,
@@ -100,7 +100,7 @@ async def daily_poll_report_callback_handler(update: Update, _: ContextTypes.DEF
 
     await update.callback_query.answer()
 
-    await update_poll_reports(update.get_bot(), poll_id)
+    await update_poll_report(update.get_bot(), get_all_poll_answers(poll_id), poll_report)
 
 
 def handlers() -> list[TypedBaseHandler]:
