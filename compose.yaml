@@ -14,7 +14,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: on-failure
     shm_size: 128mb
     ports:
