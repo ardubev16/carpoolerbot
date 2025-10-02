@@ -13,13 +13,13 @@ dependencies = [
     "holidays==0.81",
     "psycopg2==2.9.10",
     "pydantic==2.11.9",
-    "pydantic-settings==2.10.1",
-    "python-telegram-bot[job-queue]==22.4",
+    "pydantic-settings==2.11.0",
+    "python-telegram-bot[job-queue]==22.5",
     "sqlalchemy==2.0.43",
 ]
 
 [dependency-groups]
-dev = ["mypy==1.18.1", "pyright==1.1.405", "ruff==0.13.0"]
+dev = ["mypy==1.18.2", "pyright==1.1.406", "ruff==0.13.3"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
