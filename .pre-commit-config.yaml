@@ -7,7 +7,6 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
-        exclude: ^\.envrc$
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
@@ -30,6 +29,12 @@ repos:
     rev: 3.4.2
     hooks:
       - id: sqlfluff-fix
+
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 41.137.0
+    hooks:
+      - id: renovate-config-validator
+        args: [--strict]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.13.3
