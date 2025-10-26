@@ -10,10 +10,7 @@ from carpoolerbot.poll_report.types import ReturnTime
 
 
 def format_user_answer(answer: PollAnswer) -> str:
-    formatted_user = f'<a href="tg://user?id={answer.user_id}">{answer.user.user_fullname}</a>'
-
-    if answer.override_answer is False:
-        return f"<s>{formatted_user}</s>"
+    formatted_user = answer.user.user_fullname
 
     if answer.driver_id == answer.user_id:
         formatted_user = f"🚗 {formatted_user}"
@@ -31,6 +28,13 @@ def format_user_answer(answer: PollAnswer) -> str:
     return f'<a href="tg://user?id={answer.user_id}">{formatted_user}</a>'
 
 
+def sorted_positive_answers(answers: Sequence[PollAnswer]) -> list[PollAnswer]:
+    return sorted(
+        filter(lambda x: x.poll_answer and x.override_answer is not False, answers),
+        key=lambda x: x.user.user_fullname.lower(),
+    )
+
+
 def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> str:
     day_of_the_week = day.weekday()
 
@@ -44,12 +48,7 @@ def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> 
     if holiday := holidays.country_holidays("IT", subdiv="BZ").get(day):
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
-    relevant_answers = list(
-        filter(
-            lambda x: x.poll_option_id == day_of_the_week and (x.poll_answer or x.override_answer),
-            poll_answers,
-        ),
-    )
+    relevant_answers = sorted_positive_answers(poll_answers)
     if len(relevant_answers) == 0:
         return f"Nobody is going on site on <b>{day_name}</b>."
 
@@ -70,13 +69,7 @@ def full_poll_result(poll_answers: Sequence[PollAnswer]) -> str:
 
     formatted_days_answers = [
         f"<b>{calendar.day_name[day]}</b>:\n"
-        + "\n".join(
-            format_user_answer(answer)
-            for answer in sorted(
-                filter(lambda x: x.poll_answer or x.override_answer, answers),
-                key=lambda x: x.user.user_fullname.lower(),
-            )
-        )
+        + "\n".join(format_user_answer(answer) for answer in sorted_positive_answers(answers))
         for day, answers in sorted(grouped_answers.items(), key=lambda x: x[0])
     ]
 
