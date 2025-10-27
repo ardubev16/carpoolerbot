@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
-from carpoolerbot.database.models import DbUser, PollAnswer, WeeklyPoll
+from carpoolerbot.database.models import PollAnswer, TelegramUser, WeeklyPoll
 from carpoolerbot.poll_report.types import NotVotedError, ReturnTime
 
 
@@ -43,7 +43,7 @@ def upsert_poll_answers(poll_id: str, selected_options: Sequence[int], user: tel
     ]
 
     with Session.begin() as s:
-        s.merge(DbUser.from_telegram_user(user))
+        s.merge(TelegramUser.from_telegram_user(user))
         for answer in answers:
             s.merge(answer)
 

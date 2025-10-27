@@ -14,8 +14,8 @@ class Base(DeclarativeBase):
     pass
 
 
-class DbUser(Base):
-    __tablename__ = "users"
+class TelegramUser(Base):
+    __tablename__ = "telegram_users"
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     user_fullname: Mapped[str] = mapped_column()
@@ -56,7 +56,7 @@ class PollReport(Base):
 class PollAnswer(Base):
     __tablename__ = "poll_answers"
 
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.user_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("telegram_users.user_id"), primary_key=True)
     poll_id: Mapped[str] = mapped_column(ForeignKey("weekly_polls.poll_id"), primary_key=True)
     poll_option_id: Mapped[int] = mapped_column(primary_key=True)
     poll_answer: Mapped[bool]
@@ -70,5 +70,5 @@ class PollAnswer(Base):
     driver_id: Mapped[int | None] = mapped_column(BigInteger, default=None)
     return_time: Mapped[int] = mapped_column(default=0)
 
-    user: Mapped[DbUser] = relationship()
+    user: Mapped[TelegramUser] = relationship()
     weekly_poll: Mapped[WeeklyPoll] = relationship(back_populates="poll_answers")
