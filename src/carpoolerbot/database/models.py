@@ -28,8 +28,8 @@ class DbUser(Base):
         )
 
 
-class Poll(Base):
-    __tablename__ = "polls"
+class WeeklyPoll(Base):
+    __tablename__ = "weekly_polls"
 
     poll_id: Mapped[str] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(BigInteger)
@@ -37,27 +37,27 @@ class Poll(Base):
     options: Mapped[list[str]] = mapped_column(JSON)
     is_open: Mapped[bool] = mapped_column(default=True)
 
-    poll_reports: Mapped[list[PollReport]] = relationship(back_populates="poll")
-    poll_answers: Mapped[list[PollAnswer]] = relationship(back_populates="poll")
+    poll_reports: Mapped[list[PollReport]] = relationship(back_populates="weekly_poll")
+    poll_answers: Mapped[list[PollAnswer]] = relationship(back_populates="weekly_poll")
 
 
 class PollReport(Base):
     __tablename__ = "poll_reports"
 
-    poll_id: Mapped[str] = mapped_column(ForeignKey("polls.poll_id"))
+    poll_id: Mapped[str] = mapped_column(ForeignKey("weekly_polls.poll_id"))
     chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     message_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     poll_option_id: Mapped[int | None]
     sent_timestamp: Mapped[int]
 
-    poll: Mapped[Poll] = relationship(back_populates="poll_reports")
+    weekly_poll: Mapped[WeeklyPoll] = relationship(back_populates="poll_reports")
 
 
 class PollAnswer(Base):
     __tablename__ = "poll_answers"
 
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.user_id"), primary_key=True)
-    poll_id: Mapped[str] = mapped_column(ForeignKey("polls.poll_id"), primary_key=True)
+    poll_id: Mapped[str] = mapped_column(ForeignKey("weekly_polls.poll_id"), primary_key=True)
     poll_option_id: Mapped[int] = mapped_column(primary_key=True)
     poll_answer: Mapped[bool]
 
@@ -71,4 +71,4 @@ class PollAnswer(Base):
     return_time: Mapped[int] = mapped_column(default=0)
 
     user: Mapped[DbUser] = relationship()
-    poll: Mapped[Poll] = relationship(back_populates="poll_answers")
+    weekly_poll: Mapped[WeeklyPoll] = relationship(back_populates="poll_answers")

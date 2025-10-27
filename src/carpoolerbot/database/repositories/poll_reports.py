@@ -31,7 +31,7 @@ def get_poll_report(chat_id: int, message_id: int) -> PollReport:
     with Session() as s:
         report = s.scalar(
             select(PollReport)
-            .options(selectinload(PollReport.poll))
+            .options(selectinload(PollReport.weekly_poll))
             .where(
                 PollReport.chat_id == chat_id,
                 PollReport.message_id == message_id,

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
-from carpoolerbot.database.models import DbUser, Poll, PollAnswer
+from carpoolerbot.database.models import DbUser, PollAnswer, WeeklyPoll
 from carpoolerbot.poll_report.types import NotVotedError, ReturnTime
 
 
@@ -14,7 +14,7 @@ def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
         poll_answers = s.scalars(
             select(PollAnswer)
             .options(selectinload(PollAnswer.user))
-            .options(selectinload(PollAnswer.poll))
+            .options(selectinload(PollAnswer.weekly_poll))
             .where(PollAnswer.poll_id == poll_id),
         ).all()
 
@@ -26,7 +26,7 @@ def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
 
 def upsert_poll_answers(poll_id: str, selected_options: Sequence[int], user: telegram.User) -> None:
     with Session() as s:
-        poll_options = s.scalars(select(Poll.options).where(Poll.poll_id == poll_id)).first()
+        poll_options = s.scalars(select(WeeklyPoll.options).where(WeeklyPoll.poll_id == poll_id)).first()
 
     if poll_options is None:
         msg = f"Poll with ID {poll_id} does not exist or has no options."

@@ -1,7 +1,7 @@
 from telegram import Bot
 
 from carpoolerbot.database import Session
-from carpoolerbot.database.models import Poll
+from carpoolerbot.database.models import WeeklyPoll
 from carpoolerbot.database.repositories.poll import close_poll, get_latest_poll
 
 
@@ -24,7 +24,7 @@ async def send_poll(bot: Bot, chat_id: int) -> None:
 
     with Session.begin() as s:
         s.add(
-            Poll(
+            WeeklyPoll(
                 chat_id=chat_id,
                 message_id=message.id,
                 poll_id=message.poll.id,
