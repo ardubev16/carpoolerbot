@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     DB_USERNAME: str = Field(default=...)
     DB_PASSWORD: str = Field(default=...)
 
+    HOLIDAYS_COUNTRY: str = Field(default=...)
+    HOLIDAYS_SUBDIV: str | None = Field(default=None)
+
     @computed_field
     @property
     def db_url(self) -> str:

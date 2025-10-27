@@ -7,6 +7,7 @@ import holidays
 
 from carpoolerbot.database.models import PollAnswer
 from carpoolerbot.poll_report.types import ReturnTime
+from carpoolerbot.settings import settings
 
 
 def format_user_answer(answer: PollAnswer) -> str:
@@ -43,9 +44,7 @@ def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> 
 
     day_name = calendar.day_name[day_of_the_week]
 
-    # TODO: hardcoded country and subdiv, would be nice if it was configurable
-    # https://github.com/ardubev16/carpoolerbot/issues/7
-    if holiday := holidays.country_holidays("IT", subdiv="BZ").get(day):
+    if holiday := holidays.country_holidays(settings.HOLIDAYS_COUNTRY, subdiv=settings.HOLIDAYS_SUBDIV).get(day):
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
     relevant_answers = sorted_positive_answers(poll_answers)
