@@ -7,9 +7,10 @@ import holidays
 
 from carpoolerbot.database.models import PollAnswer
 from carpoolerbot.poll_report.types import ReturnTime
+from carpoolerbot.settings import settings
 
 
-def format_user_answer(answer: PollAnswer) -> str:
+def _format_user_answer(answer: PollAnswer) -> str:
     formatted_user = answer.user.user_fullname
 
     if answer.driver_id == answer.user_id:
@@ -28,7 +29,7 @@ def format_user_answer(answer: PollAnswer) -> str:
     return f'<a href="tg://user?id={answer.user_id}">{formatted_user}</a>'
 
 
-def sorted_positive_answers(answers: Sequence[PollAnswer]) -> list[PollAnswer]:
+def _sorted_positive_answers(answers: Sequence[PollAnswer]) -> list[PollAnswer]:
     return sorted(
         filter(lambda x: x.poll_answer and x.override_answer is not False, answers),
         key=lambda x: x.user.user_fullname.lower(),
@@ -43,17 +44,15 @@ def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> 
 
     day_name = calendar.day_name[day_of_the_week]
 
-    # TODO: hardcoded country and subdiv, would be nice if it was configurable
-    # https://github.com/ardubev16/carpoolerbot/issues/7
-    if holiday := holidays.country_holidays("IT", subdiv="BZ").get(day):
+    if holiday := holidays.country_holidays(settings.HOLIDAYS_COUNTRY, subdiv=settings.HOLIDAYS_SUBDIV).get(day):
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
-    relevant_answers = sorted_positive_answers(poll_answers)
+    relevant_answers = _sorted_positive_answers(poll_answers)
     if len(relevant_answers) == 0:
         return f"Nobody is going on site on <b>{day_name}</b>."
 
     formatted_users = [
-        format_user_answer(answer) for answer in sorted(relevant_answers, key=lambda x: x.user.user_fullname.lower())
+        _format_user_answer(answer) for answer in sorted(relevant_answers, key=lambda x: x.user.user_fullname.lower())
     ]
 
     return f"""\
@@ -69,7 +68,7 @@ def full_poll_result(poll_answers: Sequence[PollAnswer]) -> str:
 
     formatted_days_answers = [
         f"<b>{calendar.day_name[day]}</b>:\n"
-        + "\n".join(format_user_answer(answer) for answer in sorted_positive_answers(answers))
+        + "\n".join(_format_user_answer(answer) for answer in _sorted_positive_answers(answers))
         for day, answers in sorted(grouped_answers.items(), key=lambda x: x[0])
     ]
 
