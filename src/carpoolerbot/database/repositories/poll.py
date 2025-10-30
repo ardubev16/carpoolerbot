@@ -16,12 +16,15 @@ def get_latest_poll(chat_id: int) -> WeeklyPoll | None:
 
 
 def close_poll(chat_id: int, message_id: int) -> None:
-    with Session() as s:
-        poll = s.scalars(
-            select(WeeklyPoll).where(WeeklyPoll.chat_id == chat_id, WeeklyPoll.message_id == message_id),
-        ).first()
+    def _close_poll() -> None:
+        with Session() as s:
+            poll = s.scalars(
+                select(WeeklyPoll).where(WeeklyPoll.chat_id == chat_id, WeeklyPoll.message_id == message_id),
+            ).first()
 
-    if poll:
-        with Session.begin() as s:
-            poll.is_open = False
-            s.add(poll)
+        if poll:
+            with Session.begin() as s:
+                poll.is_open = False
+                s.add(poll)
+
+    retry_on_db_error(_close_poll)
