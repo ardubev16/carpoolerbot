@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import Application
 
 from carpoolerbot.apscheduler_sqlalchemy_adapter import PTBSQLAlchemyJobStore
+from carpoolerbot.database.session import engine
 from carpoolerbot.poll import handlers as poll_handlers
 from carpoolerbot.poll_report import handlers as poll_report_handlers
 from carpoolerbot.scheduling import handlers as scheduling_handlers
@@ -35,7 +36,8 @@ def main() -> None:
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(_set_commands).build()
 
     assert application.job_queue
-    application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, url=settings.db_url))
+    # Use the configured engine with connection pooling for the job store
+    application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, engine=engine))
 
     application.add_handlers(poll_handlers.handlers())
     application.add_handlers(poll_report_handlers.handlers())
