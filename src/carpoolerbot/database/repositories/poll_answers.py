@@ -6,22 +6,26 @@ from sqlalchemy.orm import selectinload
 
 from carpoolerbot.database import Session
 from carpoolerbot.database.models import PollAnswer, TelegramUser, WeeklyPoll
+from carpoolerbot.database.retry import retry_on_db_error
 from carpoolerbot.poll_report.types import NotVotedError, ReturnTime
 
 
 def get_all_poll_answers(poll_id: str) -> Sequence[PollAnswer]:
-    with Session() as s:
-        poll_answers = s.scalars(
-            select(PollAnswer)
-            .options(selectinload(PollAnswer.user))
-            .options(selectinload(PollAnswer.weekly_poll))
-            .where(PollAnswer.poll_id == poll_id),
-        ).all()
+    def _get_all_poll_answers() -> Sequence[PollAnswer]:
+        with Session() as s:
+            poll_answers = s.scalars(
+                select(PollAnswer)
+                .options(selectinload(PollAnswer.user))
+                .options(selectinload(PollAnswer.weekly_poll))
+                .where(PollAnswer.poll_id == poll_id),
+            ).all()
 
-    if not poll_answers:
-        return []
+        if not poll_answers:
+            return []
 
-    return poll_answers
+        return poll_answers
+
+    return retry_on_db_error(_get_all_poll_answers)
 
 
 def upsert_poll_answers(poll_id: str, selected_options: Sequence[int], user: telegram.User) -> None:
