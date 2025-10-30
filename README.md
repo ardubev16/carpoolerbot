@@ -7,17 +7,7 @@ Interactive Telegram bot useful to do carpooling.
 ### Running tests
 
 ```bash
-# Install dependencies including pytest
-pip install -e '.[dev]'
-
-# Run all tests
-PYTHONPATH=src pytest
-
-# Run specific test file
-PYTHONPATH=src pytest tests/poll_report/test_message_serializers.py
-
-# Run with coverage
-PYTHONPATH=src pytest --cov=carpoolerbot
+uv run pytest
 ```
 
 ### Create new migration

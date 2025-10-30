@@ -1,6 +1,5 @@
 import calendar
 import datetime
-from unittest.mock import MagicMock
 
 from carpoolerbot.database.models import PollAnswer, TelegramUser
 from carpoolerbot.poll_report.message_serializers import (
@@ -22,20 +21,21 @@ def create_poll_answer(
     driver_id: int | None = None,
     return_time: int = ReturnTime.AFTER_WORK,
 ) -> PollAnswer:
-    """Create a mock PollAnswer object for testing."""
-    answer = MagicMock(spec=PollAnswer)
-    answer.user_id = user_id
-    answer.poll_id = poll_id
-    answer.poll_option_id = poll_option_id
-    answer.poll_answer = poll_answer
-    answer.override_answer = override_answer
-    answer.driver_id = driver_id
-    answer.return_time = return_time
+    """Create a PollAnswer object for testing."""
+    # Create a real TelegramUser instance
+    user = TelegramUser(user_id=user_id, user_fullname=user_fullname)
 
-    # Create mock user
-    user = MagicMock(spec=TelegramUser)
-    user.user_id = user_id
-    user.user_fullname = user_fullname
+    # Create a real PollAnswer instance
+    answer = PollAnswer(
+        user_id=user_id,
+        poll_id=poll_id,
+        poll_option_id=poll_option_id,
+        poll_answer=poll_answer,
+        override_answer=override_answer,
+        driver_id=driver_id,
+        return_time=return_time,
+    )
+    # Set the user relationship manually (without database)
     answer.user = user
 
     return answer
