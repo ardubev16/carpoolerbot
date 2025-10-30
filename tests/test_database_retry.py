@@ -18,6 +18,7 @@ def test_retry_on_db_error_succeeds_first_try():
 
 def test_retry_on_db_error_succeeds_after_retries():
     """Test that function succeeds after retries."""
+    # OperationalError args: (statement, params, orig) - using None for minimal test setup
     mock_func = Mock(side_effect=[OperationalError("error", None, None), "success"])
     result = retry_on_db_error(mock_func, max_retries=3, initial_delay=0.01)
     assert result == "success"
@@ -35,7 +36,7 @@ def test_retry_on_db_error_fails_after_max_retries():
 def test_retry_on_db_error_with_args_and_kwargs():
     """Test that function is called with correct args and kwargs."""
     mock_func = Mock(return_value="success")
-    result = retry_on_db_error(mock_func, "arg1", "arg2", kwarg1="value1", max_retries=1, initial_delay=0.01)
+    result = retry_on_db_error(mock_func, "arg1", "arg2", kwarg1="value1")
     assert result == "success"
     mock_func.assert_called_with("arg1", "arg2", kwarg1="value1")
 
