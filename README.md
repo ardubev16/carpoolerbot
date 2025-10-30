@@ -4,6 +4,12 @@ Interactive Telegram bot useful to do carpooling.
 
 ## Dev guide
 
+### Running tests
+
+```bash
+uv run pytest
+```
+
 ### Create new migration
 
 ```bash
