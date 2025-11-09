@@ -36,7 +36,6 @@ def main() -> None:
     application = Application.builder().token(settings.TELEGRAM_TOKEN).post_init(_set_commands).build()
 
     assert application.job_queue
-    # Use the configured engine with connection pooling for the job store
     application.job_queue.scheduler.add_jobstore(PTBSQLAlchemyJobStore(application=application, engine=engine))
 
     application.add_handlers(poll_handlers.handlers())
