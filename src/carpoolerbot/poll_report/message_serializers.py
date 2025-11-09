@@ -48,12 +48,11 @@ def whos_on_text(poll_answers: Sequence[PollAnswer], day: datetime.datetime) -> 
         return f"I hope you are on holiday tomorrow, happy <b>{holiday}</b>!"
 
     relevant_answers = _sorted_positive_answers(poll_answers)
+    relevant_answers = list(filter(lambda x: x.poll_option_id == day_of_the_week, relevant_answers))
     if len(relevant_answers) == 0:
         return f"Nobody is going on site on <b>{day_name}</b>."
 
-    formatted_users = [
-        _format_user_answer(answer) for answer in sorted(relevant_answers, key=lambda x: x.user.user_fullname.lower())
-    ]
+    formatted_users = [_format_user_answer(answer) for answer in relevant_answers]
 
     return f"""\
 On <b>{day_name}</b> is going on site:

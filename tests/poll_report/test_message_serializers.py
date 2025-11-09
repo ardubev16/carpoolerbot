@@ -147,8 +147,7 @@ class TestWhosOnText:
 
     def test_saturday(self) -> None:
         """Test output for Saturday."""
-        # Create a Saturday date
-        saturday = datetime.datetime(2025, 11, 1)  # November 1, 2025 is a Saturday
+        saturday = datetime.datetime(2025, 11, 1)
         assert saturday.weekday() == calendar.SATURDAY
 
         answers = [create_poll_answer(1, "Alice")]
@@ -157,8 +156,7 @@ class TestWhosOnText:
 
     def test_sunday(self) -> None:
         """Test output for Sunday."""
-        # Create a Sunday date
-        sunday = datetime.datetime(2025, 11, 2)  # November 2, 2025 is a Sunday
+        sunday = datetime.datetime(2025, 11, 2)
         assert sunday.weekday() == calendar.SUNDAY
 
         answers = [create_poll_answer(1, "Alice")]
@@ -167,7 +165,7 @@ class TestWhosOnText:
 
     def test_no_one_going(self) -> None:
         """Test when no one is going to the office."""
-        monday = datetime.datetime(2025, 11, 3)  # November 3, 2025 is a Monday
+        monday = datetime.datetime(2025, 11, 3)
         assert monday.weekday() == calendar.MONDAY
 
         answers = [
@@ -179,7 +177,8 @@ class TestWhosOnText:
 
     def test_single_person_going(self) -> None:
         """Test when one person is going."""
-        monday = datetime.datetime(2025, 11, 3)  # November 3, 2025 is a Monday
+        monday = datetime.datetime(2025, 11, 3)
+        assert monday.weekday() == calendar.MONDAY
 
         answers = [create_poll_answer(1, "Alice")]
         result = whos_on_text(answers, monday)
@@ -189,16 +188,17 @@ class TestWhosOnText:
 
     def test_multiple_people_going(self) -> None:
         """Test when multiple people are going."""
-        tuesday = datetime.datetime(2025, 11, 4)  # November 4, 2025 is a Tuesday
+        monday = datetime.datetime(2025, 11, 3)
+        assert monday.weekday() == calendar.MONDAY
 
         answers = [
             create_poll_answer(1, "Charlie", poll_answer=True),
             create_poll_answer(2, "Alice", poll_answer=True),
             create_poll_answer(3, "Bob", poll_answer=True),
         ]
-        result = whos_on_text(answers, tuesday)
+        result = whos_on_text(answers, monday)
 
-        assert "On <b>Tuesday</b> is going on site:" in result
+        assert "On <b>Monday</b> is going on site:" in result
         # Check that users are sorted alphabetically
         lines = result.split("\n")
         assert '<a href="tg://user?id=2">Alice</a>' in lines[2]
@@ -207,19 +207,33 @@ class TestWhosOnText:
 
     def test_people_with_different_flags(self) -> None:
         """Test output with users having different driver/return time flags."""
-        wednesday = datetime.datetime(2025, 11, 5)  # November 5, 2025 is a Wednesday
+        monday = datetime.datetime(2025, 11, 3)
+        assert monday.weekday() == calendar.MONDAY
 
         answers = [
             create_poll_answer(1, "Alice", driver_id=1),
             create_poll_answer(2, "Bob", driver_id=-1),
             create_poll_answer(3, "Charlie", return_time=ReturnTime.LATE),
         ]
-        result = whos_on_text(answers, wednesday)
+        result = whos_on_text(answers, monday)
 
-        assert "On <b>Wednesday</b> is going on site:" in result
+        assert "On <b>Monday</b> is going on site:" in result
         assert "🚗 Alice" in result
         assert "👤 Bob" in result
         assert "🎯 Charlie" in result
+
+    def test_user_multiple_answers(self) -> None:
+        """Test when a user has multiple answers (only positive counted)."""
+        monday = datetime.datetime(2025, 11, 3)
+        assert monday.weekday() == calendar.MONDAY
+
+        answers = [
+            create_poll_answer(1, "Alice", poll_option_id=0, poll_answer=True),
+            create_poll_answer(1, "Alice", poll_option_id=1, poll_answer=True),
+        ]
+        result = whos_on_text(answers, monday)
+
+        assert result.count("Alice") == 1
 
 
 class TestFullPollResult:
