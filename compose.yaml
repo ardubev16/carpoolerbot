@@ -4,11 +4,8 @@ services:
     restart: no
     environment:
       TZ: Europe/Rome
-      TELEGRAM_TOKEN: $TELEGRAM_TOKEN
       DB_HOST: db
-      DB_NAME: carpoolerbot
-      DB_USERNAME: &db-usr carpoolerbot
-      DB_PASSWORD: &db-pwd just_a_local_insecure_password
+    env_file: ./.env
     depends_on:
       db:
         condition: service_healthy
@@ -23,10 +20,10 @@ services:
       - db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: carpoolerbot
-      POSTGRES_USER: *db-usr
-      POSTGRES_PASSWORD: *db-pwd
+      POSTGRES_USER: $DB_USERNAME
+      POSTGRES_PASSWORD: $DB_PASSWORD
     healthcheck:
-      test: [CMD, pg_isready, -U, *db-usr]
+      test: [CMD, pg_isready, -U, $DB_USERNAME]
       interval: 30s
       timeout: 60s
       retries: 5
