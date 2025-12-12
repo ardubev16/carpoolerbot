@@ -8,18 +8,18 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "alembic==1.17.1",
+    "alembic==1.17.2",
     "apscheduler==3.11.1",
-    "holidays==0.84",
+    "holidays==0.86",
     "psycopg2==2.9.11",
-    "pydantic==2.12.4",
-    "pydantic-settings==2.11.0",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
     "python-telegram-bot[job-queue]==22.5",
-    "sqlalchemy==2.0.44",
+    "sqlalchemy==2.0.45",
 ]
 
 [dependency-groups]
-dev = ["mypy==1.18.2", "pyright==1.1.407", "ruff==0.14.4", "pytest>=8.0.0"]
+dev = ["mypy==1.19.0", "pyright==1.1.407", "ruff==0.14.9", "pytest>=8.0.0"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
