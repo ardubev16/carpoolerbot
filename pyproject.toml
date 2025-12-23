@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["mypy==1.18.2", "pyright==1.1.407", "ruff==0.14.4", "pytest>=8.0.0"]
+dev = ["pytest>=8.0.0", "ruff>=0.14.2", "ty>=0.0.5"]
 
 [project.scripts]
 carpoolerbot = "carpoolerbot:main"
@@ -33,13 +33,6 @@ source = "vcs"
 
 [tool.hatch.version.raw-options]
 version_scheme = "no-guess-dev"
-
-
-[tool.pyright]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportUnknownMemberType = false
-reportUnknownVariableType = false
 
 [tool.ruff]
 target-version = "py312"
@@ -70,7 +63,7 @@ ignore = [
 ]
 
 [tool.alembic]
-script_location = "%(here)s/alembic"
+script_location = "%(here)s/migrations"
 
 # See https://alembic.sqlalchemy.org/en/latest/tutorial.html#editing-the-ini-file for all available tokens
 file_template = "%%(year)d%%(month).2d%%(day).2d_%%(hour).2d%%(minute).2d_%%(rev)s"

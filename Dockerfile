@@ -45,7 +45,7 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Needed by Alembic
 COPY --from=builder /app/pyproject.toml /app/alembic.ini /app/
-COPY --from=builder /app/alembic /app/alembic
+COPY --from=builder /app/migrations /app/migrations
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"

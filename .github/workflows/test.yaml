@@ -22,5 +22,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
 
+      # TODO: Move to pre-commit once the official hook is released: https://github.com/astral-sh/ty/issues/269
+      - name: Run typechecker
+        run: uv run ty check
+
       - name: Run tests
         run: uv run pytest
