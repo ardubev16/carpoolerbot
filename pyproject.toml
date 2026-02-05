@@ -8,14 +8,14 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "alembic==1.17.1",
-    "apscheduler==3.11.1",
-    "holidays==0.84",
+    "alembic==1.18.3",
+    "apscheduler==3.11.2",
+    "holidays==0.90",
     "psycopg2==2.9.11",
-    "pydantic==2.12.4",
-    "pydantic-settings==2.11.0",
-    "python-telegram-bot[job-queue]==22.5",
-    "sqlalchemy==2.0.44",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
+    "python-telegram-bot[job-queue]==22.6",
+    "sqlalchemy==2.0.46",
 ]
 
 [dependency-groups]
