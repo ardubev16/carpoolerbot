@@ -1,13 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "group:recommended",
-    "group:allNonMajor",
-    "security:openssf-scorecard",
-    ":assignAndReview(ardubev16)",
-    ":disableDependencyDashboard"
-  ],
+  "extends": ["github>ardubev16/common"],
   "packageRules": [
     {
       "matchPackageNames": ["python"],
