@@ -79,7 +79,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = "==1.18.4" },
     { name = "apscheduler", specifier = "==3.11.2" },
-    { name = "holidays", specifier = "==0.93" },
+    { name = "holidays", specifier = "==0.94" },
     { name = "psycopg2", specifier = "==2.9.11" },
     { name = "pydantic", specifier = "==2.12.5" },
     { name = "pydantic-settings", specifier = "==2.13.1" },
@@ -162,14 +162,14 @@ wheels = [
 
 [[package]]
 name = "holidays"
-version = "0.93"
+version = "0.94"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/61/c7574c53db6a1a6017d26a727fd062da2d9f953afcc2248424390bc06bce/holidays-0.93.tar.gz", hash = "sha256:6b04c45f759bce7c8df70863918ccaab0b465afd6c630a62c9855c99965704e5", size = 855755, upload-time = "2026-03-16T18:24:00.547Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/93/3fe32f4eb7de5bab2aec8c665ed0ae24b6acb48516f274aad18007e8d760/holidays-0.94.tar.gz", hash = "sha256:2eb6968fb66402b0fdc05d27ef36acef606a8324d19ed33c9850dde24d00914d", size = 880535, upload-time = "2026-04-06T20:43:42.471Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d8/ca/e7dcf602ba3db1b3b55ba3c9a376858cca17bc6e6a5cd580d24eecb508cb/holidays-0.93-py3-none-any.whl", hash = "sha256:2bf4585b5b0956aa608e3dcab3cf7d19b69bf34f664f5881a4b9fdf87a0907da", size = 1405804, upload-time = "2026-03-16T18:23:58.931Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/8a/e78033ccfd0c8068b35322202fda4a5f6d11f21d86d86c8fd6957619b156/holidays-0.94-py3-none-any.whl", hash = "sha256:8d7c0a458e533f2856338354bcf82d24855a767edd765a80b7b335db30914d67", size = 1444344, upload-time = "2026-04-06T20:43:41.012Z" },
 ]
 
 [[package]]
