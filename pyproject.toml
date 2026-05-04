@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic==1.18.4",
     "apscheduler==3.11.2",
-    "holidays==0.95",
+    "holidays==0.96",
     "psycopg2==2.9.12",
     "pydantic==2.13.3",
     "pydantic-settings==2.14.0",
