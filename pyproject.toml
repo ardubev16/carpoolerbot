@@ -12,7 +12,7 @@ dependencies = [
     "apscheduler==3.11.2",
     "holidays==0.96",
     "psycopg2==2.9.12",
-    "pydantic==2.13.3",
+    "pydantic==2.13.4",
     "pydantic-settings==2.14.0",
     "python-telegram-bot[job-queue]==22.7",
     "sqlalchemy==2.0.49",
