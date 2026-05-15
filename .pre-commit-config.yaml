@@ -27,12 +27,12 @@ repos:
       - id: actionlint
 
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 4.2.0
+    rev: 4.2.1
     hooks:
       - id: sqlfluff-fix
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.13
     hooks:
       # Run the linter.
       - id: ruff
