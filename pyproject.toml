@@ -14,7 +14,7 @@ dependencies = [
     "psycopg2==2.9.12",
     "pydantic==2.13.4",
     "pydantic-settings==2.14.1",
-    "python-telegram-bot[job-queue]==22.7",
+    "python-telegram-bot[job-queue]==22.8",
     "sqlalchemy==2.0.50",
 ]
 
