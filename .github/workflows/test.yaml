@@ -3,28 +3,12 @@ name: Test
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+    uses: ardubev16/common/.github/workflows/python-test.yaml@main
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-
-      - name: Set up Python
-        run: uv python install
-
-      - name: Install dependencies
-        run: uv sync --dev
-
-      # TODO: Move to pre-commit once the official hook is released: https://github.com/astral-sh/ty/issues/269
-      - name: Run typechecker
-        run: uv run ty check
-
-      - name: Run tests
-        run: uv run pytest
+  prek:
+    uses: ardubev16/common/.github/workflows/prek.yaml@main
