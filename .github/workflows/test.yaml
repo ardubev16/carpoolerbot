@@ -3,12 +3,12 @@ name: Test
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
 
 jobs:
   test:
-    uses: ardubev16/common/.github/workflows/python-test.yaml@claude/generic-github-actions-h2gnmq
+    uses: ardubev16/common/.github/workflows/python-test.yaml@main
 
   prek:
-    uses: ardubev16/common/.github/workflows/prek.yaml@claude/generic-github-actions-h2gnmq
+    uses: ardubev16/common/.github/workflows/prek.yaml@main

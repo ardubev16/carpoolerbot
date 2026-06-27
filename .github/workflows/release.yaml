@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-and-push:
-    uses: ardubev16/common/.github/workflows/docker-build.yaml@claude/generic-github-actions-h2gnmq
+    uses: ardubev16/common/.github/workflows/docker-build.yaml@main
     with:
       tags: type=ref,event=tag
 
