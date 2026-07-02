@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-and-push:
-    uses: ardubev16/common/.github/workflows/docker-build.yaml@main
+    uses: ardubev16/common/.github/workflows/docker-build.yaml@5d99c78f2b99d5a2bc79657e36582da84740f86d # main
     with:
       tags: type=ref,event=tag
 
