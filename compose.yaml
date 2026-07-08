@@ -11,7 +11,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:18-alpine@sha256:4da1a4828be12604092fa55311276f08f9224a74a62dcb4708bd7439e2a03911
+    image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
     restart: on-failure
     shm_size: 128mb
     ports:
