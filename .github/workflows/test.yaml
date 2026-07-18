@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    uses: ardubev16/common/.github/workflows/python-test.yaml@main
+    uses: ardubev16/common/.github/workflows/python-test.yaml@5d99c78f2b99d5a2bc79657e36582da84740f86d # main
 
   prek:
-    uses: ardubev16/common/.github/workflows/prek.yaml@main
+    uses: ardubev16/common/.github/workflows/prek.yaml@5d99c78f2b99d5a2bc79657e36582da84740f86d # main
