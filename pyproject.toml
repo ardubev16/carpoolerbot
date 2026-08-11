@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "alembic==1.19.0",
+    "alembic==1.19.1",
     "apscheduler==3.11.3",
     "holidays==0.102",
     "psycopg2==2.9.12",
