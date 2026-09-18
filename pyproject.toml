@@ -15,7 +15,7 @@ dependencies = [
     "pydantic==2.13.5",
     "pydantic-settings==2.15.0",
     "python-telegram-bot[job-queue]==22.8",
-    "sqlalchemy==2.0.52",
+    "sqlalchemy==2.0.53",
 ]
 
 [dependency-groups]
